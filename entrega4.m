@@ -12,7 +12,7 @@ param.velocidade = 100; % m/s
 param.intervalo_repeticao = 1e-4; % s
 param.tempo_total = 1e-5; % s
 param.SNR_dB = 3; % dB
-param.num_pulsos = 2;
+param.num_pulsos = 5; % Número de pulsos recebidos
 
 param.max_riple = 1;
 param.atenuacao = 30; %dB
@@ -21,18 +21,8 @@ param.decimacao = 10;
 % Gerar sinal de transmissão
 sinal_transmissao = transmissao(param);
 
-% Repetir o sinal de transmissão num_pulsos vezes com o intervalo de repetição param.intervalo_repeticao
-sinal_transmissao_repetido = [];
-for i = 1:param.num_pulsos
-    sinal_transmissao_repetido = [sinal_transmissao_repetido, sinal_transmissao.sinal, zeros(1, round(param.intervalo_repeticao * param.taxa_amostragem) - length(sinal_transmissao.sinal))];
-end
-sinal_transmissao.sinal = sinal_transmissao_repetido;
-size(sinal_transmissao.sinal)
-param.tempo_total/param.taxa_amostragem
-
 % Gerar sinal de recepção
 sinal_recepcao = recepcao(sinal_transmissao, param);
-
 
 % Filtragem do sinal recebido
 [sinal_centralizado, sinal_filtrado, sinal_decimado] = filtragem(sinal_recepcao, param);
@@ -135,3 +125,5 @@ plot(imag(sinal_filtro_casado.sinal));
 title('Sinal de Transmissão no Tempo');
 xlabel('Amostras');
 ylabel('Amplitude');
+
+

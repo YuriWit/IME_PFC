@@ -28,7 +28,7 @@ for i = 1:param.num_pulsos
 end
 sinal_transmissao.sinal = sinal_transmissao_repetido;
 size(sinal_transmissao.sinal)
-param.tempo_total/param.taxa_amostragem
+param.tem
 
 % Gerar sinal de recepção
 sinal_recepcao = recepcao(sinal_transmissao, param);
