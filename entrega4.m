@@ -4,19 +4,22 @@ clear, clc, close all;
 param.duracao_pulso = 10e-6; % s
 param.largura_banda = 3e6; % Hz
 param.freq_central = 30e6; % Hz
+param.freq_tx = 1e9; % Hz
 param.taxa_amostragem = 100e6; % Hz
 
 % Parâmetros da recepção
 param.posicao = 1e4; % m
-param.velocidade = 100; % m/s
+param.velocidade = -300; % m/s
 param.intervalo_repeticao = 1e-4; % s
-param.tempo_total = 1e-5; % s
+%param.tempo_total = 1e-5; % s
 param.SNR_dB = 3; % dB
 
 param.max_riple = 1;
 param.atenuacao = 30; %dB
 param.decimacao = 10;
 
+c = 3e8;
+lambda = c / param.freq_tx;
 
 % Gerar sinal de transmissão
 sinal_transmissao = transmissao(param);
@@ -32,13 +35,17 @@ for i = 1:N
     % Gerar sinal de recepção
     sinal_recepcao = recepcao(sinal_transmissao, param);
 
-    % Filtragem do sinal recebido
-    [sinal_centralizado, sinal_filtrado, sinal_decimado] = filtragem(sinal_recepcao, param);
-    
-    % decinat sinal de transmisao tbm
+    % Gerar replica do sinal transmitido
+    replica = sinal_recepcao;
+    replica.sinal = [sinal_transmissao.sinal, zeros(1,(length(sinal_recepcao.sinal) - length(sinal_transmissao.sinal)))];
+    %replica.sinal = [sinal_transmissao.sinal.*hamming(length(sinal_transmissao.sinal)).', zeros(1,(length(sinal_recepcao.sinal) - length(sinal_transmissao.sinal)))];
 
+    % Filtragem do sinal recebido e replica
+    [sinal_centralizado, sinal_filtrado, sinal_decimado] = filtragem(sinal_recepcao, param);
+    [sinal_centralizado_rep, sinal_filtrado_rep, sinal_decimado_rep] = filtragem(replica, param);
+    
     % Fitro casado
-    sinal_filtro_casado = filtro_casado(sinal_transmissao, sinal_recepcao, param);
+    sinal_filtro_casado = filtro_casado(sinal_decimado_rep, sinal_decimado, param);
     
     % Armazenar sinal recebido na matriz
     buffer_sinais_recebidos(:, i) = sinal_filtro_casado.sinal;
@@ -48,15 +55,32 @@ end
 % % Realizar a integração em tempo lento
 % sinal_integrado = sum(buffer_sinais_recebidos, 2) / N;
 
-sinal_integrado = fft(buffer_sinais_recebidos, N, 2);
-keyboard
+sinal_integrado = fftshift(fft(buffer_sinais_recebidos.', N, 1),1);
 
 % Agora você pode processar o sinal integrado como desejar
 % Por exemplo, plotar o sinal integrado
-figure;
-plot(sinal_integrado);
-xlabel('Tempo');
+vetor_distancia = linspace(0,c*param.intervalo_repeticao/2, ceil(param.intervalo_repeticao*(param.taxa_amostragem/param.decimacao)));
+vetor_velocidade = linspace(-lambda/(4*param.intervalo_repeticao), lambda/(4*param.intervalo_repeticao), N);
 
+intervalo_recepcao = 2*param.posicao/c;
+amostra_delay = ceil(intervalo_recepcao * (param.taxa_amostragem/param.decimacao));
+f_doppler = 2*param.velocidade/lambda;
+amostra_vel = ceil(N/2 + f_doppler*N*param.intervalo_repeticao/2 );
+
+figure;
+surf(vetor_distancia, vetor_velocidade, 20*log10(abs(sinal_integrado)))
+hold on
+imagesc(vetor_distancia, vetor_velocidade, 20*log10(abs(sinal_integrado)));
+xlabel('Distância');
+ylabel('Velocidade');
+figure;
+subplot(2,1,1);
+plot(vetor_velocidade, 20*log10(abs(sinal_integrado(:,amostra_delay))))
+xlabel('Velocidade');
+ylabel('Amplitude');
+subplot(2,1,2);
+plot(vetor_distancia, 20*log10(abs(sinal_integrado(amostra_vel,:))))
+xlabel('Amplitude');
 
 % Plotar os sinais no tempo e na frequência e seus espectogramas
 figure;
@@ -71,13 +95,13 @@ title('Sinal de Transmissão no Tempo');
 xlabel('Amostras');
 ylabel('Amplitude');
 subplot(2,2,3);
-plot(real(sinal_integrado));
-title('Sinal de Recebido no Tempo');
+plot(real(sinal_recepcao.sinal));
+title('Sinal de Recepcao no Tempo');
 xlabel('Amostras');
 ylabel('Amplitude');
 subplot(2,2,4);
-plot(imag(sinal_integrado));
-title('Sinal de Recebido no Tempo');
+plot(imag(sinal_recepcao.sinal));
+title('Sinal de Recepcao no Tempo');
 xlabel('Amostras');
 ylabel('Amplitude');
 
@@ -94,12 +118,12 @@ xlabel('Frequência (Hz)');
 ylabel('Fase');
 subplot(2,2,3);
 plot(sinal_recepcao.freq_range, sinal_recepcao.modulo)
-title('Espectro do Sinal de Recebido');
+title('Espectro do Sinal de Recepcao');
 xlabel('Frequência (Hz)');
 ylabel('Magnitude');
 subplot(2,2,4);
 plot(sinal_recepcao.freq_range, sinal_recepcao.fase);
-title('Espectro do Sinal de Recebido');
+title('Espectro do Sinal de Recepcao');
 xlabel('Frequência (Hz)');
 ylabel('Fase');
 
@@ -143,13 +167,23 @@ xlabel('Frequência (Hz)');
 ylabel('Fase');
 
 figure
-subplot(2,1,1);
+subplot(2,2,1);
 plot(real(sinal_filtro_casado.sinal));
 title('Sinal do Filtro Casado no Tempo');
 xlabel('Amostras');
 ylabel('Amplitude');
-subplot(2,1,2);
+subplot(2,2,2);
 plot(imag(sinal_filtro_casado.sinal));
+title('Sinal de Transmissão no Tempo');
+xlabel('Amostras');
+ylabel('Amplitude');
+subplot(2,2,3);
+plot(abs(sinal_filtro_casado.sinal));
+title('Sinal do Filtro Casado no Tempo');
+xlabel('Amostras');
+ylabel('Amplitude');
+subplot(2,2,4);
+plot(20*log10(abs((sinal_filtro_casado.sinal))));
 title('Sinal de Transmissão no Tempo');
 xlabel('Amostras');
 ylabel('Amplitude');

@@ -1,7 +1,7 @@
     function [sinal_banda_base, sinal_filtrado, sinal_decimado] = filtragem(sinal_recepcao, param)
     
-        tempo_total = ceil(param.tempo_total/param.intervalo_repeticao)*param.intervalo_repeticao;    
-        t_recepcao = 0:1/param.taxa_amostragem:tempo_total-1/param.taxa_amostragem;
+        %tempo_total = ceil(param.tempo_total/param.intervalo_repeticao)*param.intervalo_repeticao;    
+        t_recepcao = 0:1/param.taxa_amostragem:param.intervalo_repeticao-1/param.taxa_amostragem;
         
         sinal_banda_base.sinal = exp(1j*2*pi*param.freq_central*t_recepcao).*sinal_recepcao.sinal;
         sinal_banda_base.freq_range = linspace(-param.taxa_amostragem/2,param.taxa_amostragem/2,length(sinal_banda_base.sinal));
