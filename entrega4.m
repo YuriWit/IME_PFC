@@ -9,7 +9,7 @@ param.taxa_amostragem = 100e6; % Hz
 
 % Parâmetros da recepção
 param.posicao = 1e4; % m
-param.velocidade = -300; % m/s
+param.velocidade = -200; % m/s
 param.intervalo_repeticao = 1e-4; % s
 %param.tempo_total = 1e-5; % s
 param.SNR_dB = 3; % dB
