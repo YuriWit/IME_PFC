@@ -54,7 +54,6 @@ end
 
 % % Realizar a integração em tempo lento
 % sinal_integrado = sum(buffer_sinais_recebidos, 2) / N;
-
 sinal_integrado = fftshift(fft(buffer_sinais_recebidos.', N, 1),1);
 
 % Agora você pode processar o sinal integrado como desejar
