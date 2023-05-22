@@ -1,5 +1,6 @@
 clear; close all; clc;
 addpath("Classes\")
+rng(2023);
 
 %% Params
 params.c = 3e8;
@@ -12,13 +13,13 @@ params.radarVelocity = [0;0;0];
 params.sweepCentralFrequency = 1e9;
 params.sweepBandwidth = 300e6; % Sweep bandwidth in Hz
 params.sampleRate = 6e9; % Sample rate in Hz
-params.sweepTime = 1e-4; % Sweep time in seconds
-params.pulseRepetitionFrequency = 1e3; %kHz
-params.numberOfPulses = 32;
+params.sweepTime = 1e-6; % Sweep time in seconds
+params.pulseRepetitionFrequency = 1e4; %kHz
+params.numberOfPulses = 1;
 
 % Target (Helicopter)
-params.targetPosition = [100;100;0];
-params.targetVelocity = [120;0;0];
+params.targetPosition = [100;0;0];
+params.targetVelocity = [50;0;0];
 params.meanRCS = 10;
 params.bodyRadarCrossSection = 10;
 params.bladeRadarCrossSection = .1;
@@ -31,9 +32,6 @@ params.bladeAngularVelocity = [0;0;240*2*pi/60];
 
 %% Initiate Objects
 radar = Radar(params);
-figure
-plot(radar.WaveForm)
-return
 target = RadarTarget(params);
 enviorment = phased.FreeSpace(...
     'PropagationSpeed',params.c,...
@@ -42,20 +40,16 @@ enviorment = phased.FreeSpace(...
     'SampleRate',params.sampleRate);
 
 %% Transmit
-NSampPerPulse = round(...
-    params.sampleRate/params.pulseRepetitionFrequency);
-%Niter = 10e3;
+NSampPerPulse = round(100*params.sampleRate*params.sweepTime);
 Niter = 32;
-y = complex(zeros(NSampPerPulse*params.numberOfPulses,Niter));
-rng(2023);
+y = complex(zeros(NSampPerPulse,Niter));
+dt = 1/params.pulseRepetitionFrequency;
 for i=1:Niter
-    dt = 1/params.pulseRepetitionFrequency;
     [scattersPosition,scattersVelocity] = target.targetMotion(dt);
-    [~,scattersAngle] = rangeangle(target.Position, radar.Position);
-    targetDistance = sqrt(sum((target.Position - radar.Position).^2));
+    [~,scattersAngle] = rangeangle(scattersPosition, radar.Position);
+    targetDistance = sqrt(sum((scattersPosition - radar.Position).^2));
     
     transmittedSignal = radar.getTransmittedSignal(scattersAngle);
-    
     %% Free Space Propagation
     propagatedSignal = enviorment(...
         transmittedSignal,...
@@ -98,13 +92,13 @@ figure
         params.sampleRate,...
         'centered',...
         'yaxis');
-    xlim([2 8])
-    ylim([-5 5])
+    xlim([0 1])
+    ylim([-2 3])
 
 figure
 plotResponse(...
     rangeDopplerResponse,...
-    y,...
+    y(:,1:Niter),...
     matchedFilderCoefficients);
 ylim([0 100])
 
