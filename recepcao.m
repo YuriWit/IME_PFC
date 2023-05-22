@@ -1,10 +1,16 @@
-function sinal_recebido = recepcao(sinal_transmissao, param)
+function sinal_recebido = recepcao(sinal_transmissao, emissor)
     c = 3e8;
     lambda = c / param.freq_tx;
 
+    srr = emissor.srr;
+    p = emissor.p
+    v = emissor.v
+
+    r = sqrt(p.x^2+p.y^2+p.z^2);
+
     % Sinal de recepção
-    intervalo_recepcao = 2*param.posicao/c;
-    %tempo_total = ceil(param.tempo_total/param.intervalo_repeticao)*param.intervalo_repeticao;    
+    intervalo_recepcao = 2*r/c;
+    %tempo_total = ceil(param.tempo_total/param.intervalo_repeticao)*param.intervalo_repeticao;
     t_recepcao = 0:1/param.taxa_amostragem:param.intervalo_repeticao-1/param.taxa_amostragem;
 
     delay = ceil(intervalo_recepcao * param.taxa_amostragem);
@@ -12,6 +18,8 @@ function sinal_recebido = recepcao(sinal_transmissao, param)
     sinal_recepcao = zeros(size(t_recepcao));
     sinal_recepcao(1:length(sinal_transmissao.sinal)) = sinal_transmissao.sinal;
     sinal_recepcao = [zeros(1,delay) sinal_recepcao(1:end-delay)];
+
+    v_proj = dot(u,v)/dot(v,v)*v;
 
     % Efeito do Doppler no sinal de recepção e ruído térmico
     f_doppler = 2*param.velocidade/lambda;
