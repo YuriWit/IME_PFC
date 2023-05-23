@@ -1,68 +1,46 @@
-classdef Radar
+classdef Radar < handle
 
     properties
-        % Radar
+        % Dynamic
         Time
         Position
         Velocity
 
         % Objects
-        WaveForm
+        Waveform
         Transmitter
         Receiver
-        TransmissionAntena
-        CollectionAntena
+        Radiator
+        Collector
     end
     
     methods
-        function obj = Radar(params)
+        function obj = Radar(p) % p = params
             obj.Time = 0;
-            obj.Position = params.radarPosition;
-            obj.Velocity = params.radarVelocity;
-            
-            start_f = params.sweepCentralFrequency-params.sweepBandwidth/2;
-            end_f = params.sweepCentralFrequency+params.sweepBandwidth/2;
-            frequencyModulation = [start_f end_f];
-            
-            obj.WaveForm = phased.CustomFMWaveform(...
-                'SampleRate',params.sampleRate,...
-                'PulseWidth',params.sweepTime,...
-                'FrequencyModulation',frequencyModulation,...
-                'NumPulses',params.numberOfPulses);
-
-            obj.Transmitter = phased.Transmitter;
-            obj.Receiver = phased.ReceiverPreamp;
-
-            uniformRectangularArray = phased.URA(...
-                'Size',4,...
-                'ElementSpacing',params.c/params.sweepCentralFrequency/2);
-
-            obj.TransmissionAntena = phased.Radiator(...
-                'Sensor',uniformRectangularArray,...
-                'PropagationSpeed',params.c,...
-                'OperatingFrequency',params.sweepCentralFrequency);
-
-            obj.CollectionAntena = phased.Collector(...
-                'Sensor',uniformRectangularArray,...
-                'PropagationSpeed',params.c,...
-                'OperatingFrequency',params.sweepCentralFrequency);
+            obj.Position = p.radarPosition;
+            obj.Velocity = [0;0;0];
+            obj.Waveform = p.Waveform;
+            obj.Transmitter = p.Transmitter;
+            obj.Receiver = p.Receiver;
+            obj.Radiator = p.Radiator;
+            obj.Collector = p.Collector;
         end
         
-        function transmittedSignal = getTransmittedSignal(obj,angle)
-            pulseWaveformSamples = obj.WaveForm();
+        function transmittedSignal = getTransmittedSignal(obj,transmissionAngle)
+            pulseWaveformSamples = obj.Waveform();
             transmissionSignal = obj.Transmitter(pulseWaveformSamples);
-            transmittedSignal = obj.TransmissionAntena(transmissionSignal,angle);
+            transmittedSignal = obj.Radiator(transmissionSignal,transmissionAngle);
         end
 
-        function receivedSignal = receiveReflectedSignal(obj,signal,arrivingAngle)
-            collectedSignal = obj.CollectionAntena(signal,arrivingAngle);
+        function receivedSignal = receiveReflectedSignal(obj,signal,receptionAngle)
+            collectedSignal = obj.Collector(signal,receptionAngle);
             receivedSignal = obj.Receiver(collectedSignal);
         end
 
-        function [radarPosition,radarVelocity] = radarMotion(obj,dt)
-            obj.Time = obj.Time+dt;
-            [radarPosition radarVelocity] = [obj.Position obj.Velocity];
+        function update(obj,dt)
+            obj.Time = obj.Time + dt;
         end
+
     end
 end
 

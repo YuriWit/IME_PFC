@@ -2,105 +2,100 @@ clear; close all; clc;
 addpath("Classes\")
 rng(2023);
 
-%% Params
-params.c = 3e8;
+%% Parameters
 
-% Radar
-params.radarPosition = [0;0;0];
-params.radarVelocity = [0;0;0];
+% Global Params 
+% gp for globalParams
+p.c = 3e8; % speed of light (m/s)
 
-% Waveform
-params.sweepCentralFrequency = 1e9;
-params.sweepBandwidth = 300e6; % Sweep bandwidth in Hz
-params.sampleRate = 6e9; % Sample rate in Hz
-params.sweepTime = 1e-6; % Sweep time in seconds
-params.pulseRepetitionFrequency = 1e4; %kHz
-params.numberOfPulses = 1;
+% Simple Radar 
+% rp for radarParams
+p.radarPosition = [0;0;0]; % position vector (m)
+p.fc = 10e9; % sweep central frequency (Hz)
+p.B = 300e6; % sweep bandwidth (Hz)
+p.fs = 15e9; % sample rate (Hz) 
+p.T = 3e-7; % sweep time (s)
+p.prf = 3e3; % pulse repetition frequency (Hz)
+p.nPulses = 1; % number of pulses
 
-% Target (Helicopter)
-params.targetPosition = [100;0;0];
-params.targetVelocity = [50;0;0];
-params.meanRCS = 10;
-params.bodyRadarCrossSection = 10;
-params.bladeRadarCrossSection = .1;
-params.numberOfBlades = 4;
-params.bladeLength = 6.5;
-params.bladeAngularVelocity = [0;0;240*2*pi/60];
+% Point Target 
+% tp for targetParams
+p.targetPosition = [500;0;0]; % position vector (m)
+p.targetVelocity = [20;0;0]; % velocity vector (m/s)
+p.meanRCS = 1; % mean radar cross section (m^2)
 
-% Enviorment(FreeSpace)
-%add class for env
+params = p;
 
 %% Initiate Objects
-radar = Radar(params);
-target = RadarTarget(params);
+radar = SimpleRadar(params);
+target = PointTarget(params);
 enviorment = phased.FreeSpace(...
-    'PropagationSpeed',params.c,...
-    'OperatingFrequency',params.sweepCentralFrequency,...
+    'PropagationSpeed',p.c,...
+    'OperatingFrequency',p.fc,...
     'TwoWayPropagation',true,...
-    'SampleRate',params.sampleRate);
+    'SampleRate',p.fs);
 
 %% Transmit
-NSampPerPulse = round(100*params.sampleRate*params.sweepTime);
-Niter = 32;
-y = complex(zeros(NSampPerPulse,Niter));
-dt = 1/params.pulseRepetitionFrequency;
-for i=1:Niter
-    [scattersPosition,scattersVelocity] = target.targetMotion(dt);
-    [~,scattersAngle] = rangeangle(scattersPosition, radar.Position);
-    targetDistance = sqrt(sum((scattersPosition - radar.Position).^2));
+numPulses = 16;
+receivedSignal = zeros(length(radar.Waveform()),numPulses);
+dt = 1/p.prf;
+for i=1:numPulses
+    % update bodies motion
+    %radar.update(dt)
+    %target.update(dt)
     
-    transmittedSignal = radar.getTransmittedSignal(scattersAngle);
-    %% Free Space Propagation
+    % get revelant values
+    [targetRange,targetAngle] = rangeangle(target.Position,radar.Position);
+
+    % signal transmission
+    transmittedSignal = radar.getTransmittedSignal(targetAngle);
+
+    % signal propagation
     propagatedSignal = enviorment(...
         transmittedSignal,...
         radar.Position,...
-        scattersPosition,...
+        target.Position,...
         radar.Velocity,...
-        scattersVelocity);
+        target.Velocity);
     
-    %% Target Reflection
-    %test
+    % signal reflection
     reflectedSignal = target.getReflectedSignal(propagatedSignal);
     
-    %% Reception
-    receivedSignal = radar.receiveReflectedSignal(...
+    % signal reception
+    receivedSignal(:,1) = radar.receiveReflectedSignal(...
         reflectedSignal,...
-        scattersAngle);
-    
-    %% Matched Filter
-    integratedSignal = sum(reflectedSignal, 2);
-    y(:,i) = integratedSignal;
-
+        targetAngle);
 end
-
 rangeDopplerResponse = phased.RangeDopplerResponse(...
-    'PropagationSpeed',params.c,...
-    'SampleRate',params.sampleRate,...
     'DopplerFFTLengthSource','Property',...
     'DopplerFFTLength',128,...
+    'SampleRate',p.fs,...
     'DopplerOutput','Speed',...
-    'OperatingFrequency',params.sweepCentralFrequency);
-matchedFilderCoefficients = getMatchedFilter(radar.WaveForm);
+    'OperatingFrequency',p.fc,...
+    'PRFSource','Property',...
+    'PRF',p.prf);
+
+filter = getMatchedFilter(radar.Waveform);
 
 %% Plots
 figure
-    spectrogram(...
-        transmittedSignal,...
-        hamming(32),...
-        30,...
-        [],...
-        params.sampleRate,...
-        'centered',...
-        'yaxis');
-    xlim([0 1])
-    ylim([-2 3])
+spectrogram(...
+    transmittedSignal,...
+    hamming(32),...
+    30,...
+    [],...
+    p.fs,...
+    'centered',...
+    'yaxis');
+%xlim([0 30])
+%ylim([0 2])
 
 figure
 plotResponse(...
     rangeDopplerResponse,...
-    y(:,1:Niter),...
-    matchedFilderCoefficients);
-ylim([0 100])
+    receivedSignal(:,1:numPulses),...
+    filter);
+%ylim([0 100])
 
 
 

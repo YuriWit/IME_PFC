@@ -1,19 +1,29 @@
 classdef HelicopterTarget < RadarTarget
     
-    properties 
-        NumberOfBlades
-        BladeLength
-        BladeAngularVelocity
+    properties
+        Position
+        Velocity
+        
+        Body
+        Blades
     end
     
     methods
-        function obj = HelicopterTarget(params)
+        function obj = HelicopterTarget(p)
+            bp.c = p.c;
+            bp.fc = p.fc;
+            bp.meanRCS = p.meanRCS;
+            Body = PointTraget()
             params.meanRCS = [params.bodyRadarCrossSection ...
                 params.bladeRadarCrossSection*ones(1,params.numberOfBlades)];
             obj@RadarTarget(params);
             obj.NumberOfBlades = params.numberOfBlades;
             obj.BladeLength = params.bladeLength;
             obj.BladeAngularVelocity = params.bladeAngularVelocity;
+        end
+
+        function pointTargets = getPointTargets(obj, t)
+            pointTargets = zeros(100,3,2);
         end
 
         function [scattersPosition, scattersVelocity] = targetMotion(obj, dt)
@@ -50,6 +60,16 @@ classdef HelicopterTarget < RadarTarget
                 % Store in cell arrays
                 scattersPosition{i+1} = bladePosition;
                 scattersVelocity{i+1} = bladeVelocity;
+            end
+        end
+
+
+        
+        function returnVal = getScattersMotion(obj)
+            numScatters = length(obj.Scatters.MeanRCS);
+            returnVal = zeros(numScatters,3,2);
+            for i=1:numScatters
+                returnVal(i,:,:) = [obj.Position obj.Velocity];
             end
         end
     end

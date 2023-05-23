@@ -29,19 +29,19 @@ figure;
 spectrogram(sinal_transmissao.sinal, hamming(128), 120, [], param.taxa_amostragem, 'yaxis');
 title('Espectrograma do Sinal de Transmissão');
 
-%% Definir geometria do corpo
-drone_params.num_de_rotores = 1;
-drone_params.raio_da_helice = 2; % m
-drone_params.pos_dos_rotores = zeros([corpo.num_de_rotores, 2]); % 2d
-drone_params.pos_dos_rotores(1,:) = [0 0]; % m
-drone_params.velocidade_dos_rotores = zeros([corpo.num_de_rotores,1]); % 2d
-drone_params.velocidade_dos_rotores(1,:) = [47]; % rad/s (talzez seja melhor usar RPM)
-drone_params.num_de_pas_por_rotor = 4;
-
-drone_params.pos_inicial = [3 4 0] % m (x y z) (radar em [0 0 0])
-drone_params.rotacao_inicial = [0 0 0] % Rad (pitch roll yaw) (radar em [0 0 0])
-drone_params.velocidade_inicial = [1 0 0] % m/s (x y z) (radar em [0 0 0])
-drone_params.velocidade_angular_inicial = [0 0 0] % Rad/s (pitch roll yaw) (radar em [0 0 0])
+% %% Definir geometria do corpo
+% drone_params.num_de_rotores = 1;
+% drone_params.raio_da_helice = 2; % m
+% drone_params.pos_dos_rotores = zeros([corpo.num_de_rotores, 2]); % 2d
+% drone_params.pos_dos_rotores(1,:) = [0 0]; % m
+% drone_params.velocidade_dos_rotores = zeros([corpo.num_de_rotores,1]); % 2d
+% drone_params.velocidade_dos_rotores(1,:) = [47]; % rad/s (talzez seja melhor usar RPM)
+% drone_params.num_de_pas_por_rotor = 4;
+% 
+% drone_params.pos_inicial = [3 4 0] % m (x y z) (radar em [0 0 0])
+% drone_params.rotacao_inicial = [0 0 0] % Rad (pitch roll yaw) (radar em [0 0 0])
+% drone_params.velocidade_inicial = [1 0 0] % m/s (x y z) (radar em [0 0 0])
+% drone_params.velocidade_angular_inicial = [0 0 0] % Rad/s (pitch roll yaw) (radar em [0 0 0])
 
 % pra esse codigo, o corpo eh um array de pontos emissores
 % [srr x y z vx vy vz]

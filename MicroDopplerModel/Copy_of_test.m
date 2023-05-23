@@ -2,8 +2,6 @@ clear; close all; clc;
 addpath("Classes\")
 rng(2023);
 
-%% Parameters
-
 % Global Params 
 % gp for globalParams
 gp.c = 3e8; % speed of light (m/s)
@@ -24,38 +22,43 @@ radarParams = rp;
 % tp for targetParams
 tp.Position = [-20;0;0]; % position vector (m)
 tp.Velocity = [12;0;0]; % velocity vector (m/s)
-tp.meanRCS = 1e-2; % mean radar cross section (m^2)
+tp.meanRCS = 10; % mean radar cross section (m^2)
+tp.bRCS = 10;
+tp.bladeRadarCrossSection = .1;
+tp.numberOfBlades = 4;
+tp.bladeLength = 6.5;
+tp.bladeAngularVelocity = [0;0;240*2*pi/60];
 targetParams = tp;
 
+% Enviorment(FreeSpace)
+%add class for env
+
 %% Initiate Objects
-radar = Radar(radarParams);
-target = PointTarget(targetParams);
+radar = Radar(params);
+target = RadarTarget(params);
 enviorment = phased.FreeSpace(...
-    'PropagationSpeed',globalParams.c,...
-    'OperatingFrequency',radarParams.fc,...
+    'PropagationSpeed',params.c,...
+    'OperatingFrequency',params.sweepCentralFrequency,...
     'TwoWayPropagation',true,...
-    'SampleRate',radarParams.fs);
+    'SampleRate',params.sampleRate);
 
 %% Transmit
-numPulses = 16;
-rxsig = zeros(length(radar.Waveform()),numPulses);
-dt = 1/radarParams.prf;
-for i=1:numPulses
-    % update bodies motion
-    radar.update(dt)
-    target.update(dt)
+NSampPerPulse = round(params.sampleRate/params.pulseRepetitionFrequency);
+Niter = 16;
+y = complex(zeros(NSampPerPulse,Niter));
+dt = 1/params.pulseRepetitionFrequency;
+for i=1:Niter
+    [scattersPosition,scattersVelocity] = target.targetMotion(dt);
+    [~,scattersAngle] = rangeangle(scattersPosition, radar.Position);
     
-    % get revelant values
-    [targetRange,targetAngle] = rangeangle(tgtpos,txpos);
-
-    % signal propagation
     transmittedSignal = radar.getTransmittedSignal(scattersAngle);
+    %% Free Space Propagation
     propagatedSignal = enviorment(...
         transmittedSignal,...
         radar.Position,...
-        target.Position,...
+        scattersPosition,...
         radar.Velocity,...
-        target.Velocity);
+        scattersVelocity);
     
     %% Target Reflection
     %test
