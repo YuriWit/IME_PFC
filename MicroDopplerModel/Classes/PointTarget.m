@@ -22,7 +22,7 @@ classdef PointTarget < handle
         end
 
         function update(obj, dt)
-            obj.Position = dt * obj.Velocity;
+            obj.Position = obj.Position + dt * obj.Velocity;
         end
 
     end
