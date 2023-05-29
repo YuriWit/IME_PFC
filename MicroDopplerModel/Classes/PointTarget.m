@@ -21,6 +21,10 @@ classdef PointTarget < handle
             reflectedSignal = obj.Target(signal);
         end
 
+        function update(obj, dt)
+            obj.Position = dt * obj.Velocity;
+        end
+
     end
 end
 

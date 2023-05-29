@@ -10,8 +10,8 @@ classdef SimpleRadar < Radar
         % T     = chirp signal width
         function obj = SimpleRadar(p)
             % chirp waveform creation
-            start_f = p.fc - p.B/2;
-            end_f = p.fc + p.B/2;
+            start_f = -p.B/2;
+            end_f = p.B/2;
             p.Waveform = phased.CustomFMWaveform(...
                 'SampleRate',p.fs,...
                 'PulseWidth',p.T,...
@@ -27,7 +27,7 @@ classdef SimpleRadar < Radar
 
             % simple sensor for Radiator and Collector
             sensor = phased.IsotropicAntennaElement(...
-                'FrequencyRange',[1e9 10e9]);
+                'FrequencyRange',[1e8 10e9]);
 
             % simple TransmissionAntena
             p.Radiator = phased.Radiator(...

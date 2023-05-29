@@ -6,43 +6,53 @@ rng(2023);
 
 % Global Params 
 % gp for globalParams
-p.c = 3e8; % speed of light (m/s)
+p.c = physconst('LightSpeed'); % speed of light (m/s)
 
 % Simple Radar 
 % rp for radarParams
 p.radarPosition = [0;0;0]; % position vector (m)
-p.fc = 10e9; % sweep central frequency (Hz)
-p.B = 300e6; % sweep bandwidth (Hz)
-p.fs = 15e9; % sample rate (Hz) 
-p.T = 3e-7; % sweep time (s)
-p.prf = 3e3; % pulse repetition frequency (Hz)
+p.fs = 20e6; % sample rate (Hz) 
+p.fc = 3e9; %    central frequency (Hz)
+p.B = 5e6; % sweep bandwidth (Hz)
+p.T = 10e-6; % sweep time (s)
+p.prf = 1e3; % pulse repetition frequency (Hz)
 p.nPulses = 1; % number of pulses
 
 % Point Target 
 % tp for targetParams
 p.targetPosition = [500;0;0]; % position vector (m)
-p.targetVelocity = [20;0;0]; % velocity vector (m/s)
-p.meanRCS = 1; % mean radar cross section (m^2)
+p.targetVelocity = [200;0;0]; % velocity vector (m/s)
+p.meanRCS = 10; % mean radar cross section (m^2)
 
 params = p;
 
 %% Initiate Objects
 radar = SimpleRadar(params);
 target = PointTarget(params);
-enviorment = phased.FreeSpace(...
+enviroment = phased.FreeSpace(...
     'PropagationSpeed',p.c,...
     'OperatingFrequency',p.fc,...
     'TwoWayPropagation',true,...
     'SampleRate',p.fs);
 
+%% Test Radar
+if true
+    signal = real(radar.Waveform());
+    nSamples = p.fs*p.T;
+    figure
+    plot(signal(1:nSamples))
+
+    signal = radar.getTransmittedSignal(0);
+    figure
+    spectrogram(signal(1:nSamples),hamming(64),60,[],p.fc,'yaxis');
+end
 %% Transmit
 numPulses = 16;
 receivedSignal = zeros(length(radar.Waveform()),numPulses);
 dt = 1/p.prf;
 for i=1:numPulses
     % update bodies motion
-    %radar.update(dt)
-    %target.update(dt)
+    target.update(dt)
     
     % get revelant values
     [targetRange,targetAngle] = rangeangle(target.Position,radar.Position);
@@ -51,7 +61,7 @@ for i=1:numPulses
     transmittedSignal = radar.getTransmittedSignal(targetAngle);
 
     % signal propagation
-    propagatedSignal = enviorment(...
+    propagatedSignal = enviroment(...
         transmittedSignal,...
         radar.Position,...
         target.Position,...
@@ -71,31 +81,20 @@ rangeDopplerResponse = phased.RangeDopplerResponse(...
     'DopplerFFTLength',128,...
     'SampleRate',p.fs,...
     'DopplerOutput','Speed',...
-    'OperatingFrequency',p.fc,...
-    'PRFSource','Property',...
-    'PRF',p.prf);
+    'OperatingFrequency',p.fc);
 
 filter = getMatchedFilter(radar.Waveform);
 
 %% Plots
-figure
-spectrogram(...
-    transmittedSignal,...
-    hamming(32),...
-    30,...
-    [],...
-    p.fs,...
-    'centered',...
-    'yaxis');
-%xlim([0 30])
-%ylim([0 2])
+
 
 figure
 plotResponse(...
     rangeDopplerResponse,...
     receivedSignal(:,1:numPulses),...
     filter);
-%ylim([0 100])
+ylim([0 1000])
+vlim([-300 300])
 
 
 
