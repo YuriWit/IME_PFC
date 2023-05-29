@@ -6,12 +6,10 @@ classdef HelicopterTarget < RadarTarget
         
         Body
         Blades
-        Points
     end
     
     methods
         function obj = HelicopterTarget(p)
-            bp.targetPosition = p.targetPosition
             bp.c = p.c;
             bp.fc = p.fc;
             bp.meanRCS = p.meanRCS;
