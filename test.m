@@ -21,7 +21,7 @@ p.nPulses = 1; % number of pulses
 
 % Point Target 
 % tp for targetParams
-p.targetPosition = [300;400;0]; % position vector (m)
+p.targetPosition = [-500;0;0]; % position vector (m)
 p.targetVelocity = [50;0;0]; % velocity vector (m/s)
 p.meanRCS = 1; % mean radar cross section (m^2)
 
@@ -96,7 +96,7 @@ plotResponse(...
     receivedSignal(:,1:numPulses),...
     filter);
 ylim([0 1000])
-vlim([-300 300])
+xlim([-100 100])
 
 
 
