@@ -63,8 +63,14 @@ for i=1:numPulses
     for j=1:length(pointTargets)
         pTarget = pointTargets(j);
 
+        % get global values
+        globalTargetPosition = target.Position + pTarget.Position;
+        globalTargetVelocity = target.Velocity + pTarget.Velocity;
+        gtPosition = globalTargetPosition;
+        gtVelocity = globalTargetVelocity;
+
         % get revelant values
-        [targetRange,targetAngle] = rangeangle(pTarget.Position,radar.Position);
+        [targetRange,targetAngle] = rangeangle(gtPosition,radar.Position);
     
         % signal transmission
         transmittedSignal = radar.getTransmittedSignal(targetAngle);
@@ -73,9 +79,9 @@ for i=1:numPulses
         propagatedSignal = enviroment(...
             transmittedSignal,...
             radar.Position,...
-            pTarget.Position,...
+            gtPosition,...
             radar.Velocity,...
-            pTarget.Velocity);
+            gtVelocity);
         
         % signal reflection
         reflectedSignal = pTarget.getReflectedSignal(propagatedSignal);

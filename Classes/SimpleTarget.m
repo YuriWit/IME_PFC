@@ -26,12 +26,13 @@ classdef SimpleTarget < AbstractBodyTarget
         function update(obj,dt)
             % body
             obj.Position = obj.Position + obj.Velocity * dt;
+
             % points
             obj.Point1.Position = obj.Point1.Position + ...
-                (obj.Velocity + obj.Point1.Velocity) * dt;
+                obj.Point1.Velocity * dt;
 
             obj.Point2.Position = obj.Point2.Position + ...
-                (obj.Velocity + obj.Point2.Velocity) * dt;
+                obj.Point2.Velocity * dt;
         end
 
         function pointTargets = getPointTargets(obj)

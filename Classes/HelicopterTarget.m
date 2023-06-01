@@ -1,4 +1,4 @@
-classdef HelicopterTarget < AbstractBodyTarger
+classdef HelicopterTarget < AbstractBodyTarget
     
     properties
         Body
@@ -11,6 +11,8 @@ classdef HelicopterTarget < AbstractBodyTarger
     
     methods
         function obj = HelicopterTarget(p)
+            obj@AbstractBodyTarget(p);
+
             bp.c = p.c;
             bp.fc = p.fc;
             bp.meanRCS = p.bodyRCS;
@@ -20,6 +22,7 @@ classdef HelicopterTarget < AbstractBodyTarger
             
             bp.meanRCS = p.bladeRCS;
             for i=1:p.numberOfBlades
+                
             end
 
             params.meanRCS = [params.bodyRadarCrossSection ...
