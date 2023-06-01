@@ -24,16 +24,17 @@ p.nPulses = 1; % number of pulses
 p.targetPosition = [-500;0;0]; % position vector (m)
 p.targetVelocity = [50;0;0]; % velocity vector (m/s)
 p.meanRCS = 1; % mean radar cross section (m^2)
-p.p1.Position = [100;0;0];
-p.p1.Velocity = [50;0;0];
-p.p2.Position = [-100;0;0];
-p.p2.Velocity = [-25;0;0];
+
+p.length = 1;
+p.angle = 0;
+p.angularVelocity = 400 *2*pi/60;
+p.numberOfPointTargets = 1;
 
 params = p;
 
 %% Initiate Objects
 radar = SimpleRadar(params);
-target = SimpleTarget(params);
+target = Blade(params);
 enviroment = phased.FreeSpace(...
     'PropagationSpeed',p.c,...
     'OperatingFrequency',p.fc,...
