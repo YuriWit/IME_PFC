@@ -1,6 +1,9 @@
-classdef HelicopterTarget < AbstractBodyTarger
+classdef HelicopterTarget < handle
     
     properties
+        Position
+        Velocity
+
         Body
         Blades
         

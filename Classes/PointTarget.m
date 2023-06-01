@@ -22,5 +22,6 @@ classdef PointTarget < handle
         end
 
     end
+
 end
 

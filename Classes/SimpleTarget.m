@@ -1,15 +1,15 @@
-classdef SimpleTarget < handle
-    
-    properties
-        Position
-        Velocity
+classdef SimpleTarget < AbstractBodyTarget
 
+    properties
         Point1
         Point2
     end
     
     methods
+
         function obj = SimpleTarget(p)
+            obj@AbstractBodyTarget(p);
+
             bp.c = p.c;
             bp.fc = p.fc;
             bp.meanRCS = p.meanRCS;
@@ -21,9 +21,6 @@ classdef SimpleTarget < handle
             bp.position = p.p2.Position;
             bp.velocity = p.p2.Velocity;
             obj.Point2 = PointTarget(bp);
-
-            obj.Position = p.targetPosition;
-            obj.Velocity = p.targetVelocity;
         end
 
         function update(obj,dt)
@@ -40,6 +37,8 @@ classdef SimpleTarget < handle
         function pointTargets = getPointTargets(obj)
             pointTargets = [obj.Point1 obj.Point2];
         end
+
     end
+
 end
 
