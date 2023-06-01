@@ -30,15 +30,12 @@ classdef SimpleTarget < handle
             % body
             obj.Position = obj.Position + obj.Velocity * dt;
             % points
-            obj.Point1.Position = obj.Point1.Position + ...
-                (obj.Velocity + obj.Point1.Velocity) * dt;
-
-            obj.Point2.Position = obj.Point2.Position + ...
-                (obj.Velocity + obj.Point2.Velocity) * dt;
+            obj.Point1.Position = obj.Position + ...
+                      obj.Point1.Position +  + obj.Velocity * dt;
         end
 
         function pointTargets = getPointTargets(obj)
-            pointTargets = [obj.Point1 obj.Point2];
+            pointTargets = [obj.Point obj.Point2];
         end
     end
 end
