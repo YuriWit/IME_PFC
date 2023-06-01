@@ -1,9 +1,8 @@
-classdef HelicopterTarget < RadarTarget
+classdef HelicopterTarget < handle
     
     properties
         Position
         Velocity
-        
         Body
         Blades
     end
@@ -13,7 +12,7 @@ classdef HelicopterTarget < RadarTarget
             bp.c = p.c;
             bp.fc = p.fc;
             bp.meanRCS = p.meanRCS;
-            Body = PointTraget()
+            Body = PointTraget(bp);
             params.meanRCS = [params.bodyRadarCrossSection ...
                 params.bladeRadarCrossSection*ones(1,params.numberOfBlades)];
             obj@RadarTarget(params);

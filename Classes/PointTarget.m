@@ -9,8 +9,8 @@ classdef PointTarget < handle
     methods
 
         function obj = PointTarget(p)
-            obj.Position = p.targetPosition;
-            obj.Velocity = p.targetVelocity;
+            obj.Position = p.position;
+            obj.Velocity = p.velocity;
             obj.Target = phased.RadarTarget(...
                 'MeanRCS',p.meanRCS,...
                 'PropagationSpeed',p.c,...
@@ -19,10 +19,6 @@ classdef PointTarget < handle
 
         function reflectedSignal = getReflectedSignal(obj,signal)
             reflectedSignal = obj.Target(signal);
-        end
-
-        function update(obj, dt)
-            obj.Position = obj.Position + dt * obj.Velocity;
         end
 
     end
