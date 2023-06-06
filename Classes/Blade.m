@@ -28,6 +28,8 @@ classdef Blade < AbstractBodyTarget
         end
 
         function update(obj,dt)
+            update@AbstractBodyTarget(obj,dt);
+
             obj.Angle = obj.Angle + dt * obj.AngularVelocity;
             tipPosition = [ cos(obj.Angle)*obj.Length;
                             sin(obj.Angle)*obj.Length;

@@ -25,7 +25,7 @@ classdef SimpleTarget < AbstractBodyTarget
 
         function update(obj,dt)
             % body
-            obj.Position = obj.Position + obj.Velocity * dt;
+            update@AbstractBodyTarget.update(dt);
 
             % points
             obj.Point1.Position = obj.Point1.Position + ...

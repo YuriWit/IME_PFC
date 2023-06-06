@@ -10,10 +10,13 @@ classdef (Abstract) AbstractBodyTarget < handle
             obj.Position = p.targetPosition;
             obj.Velocity = p.targetVelocity;
         end
+
+        function update(obj,dt)
+            obj.Position = obj.Position + dt * obj.Velocity;
+        end
     end
     
     methods (Abstract)
-        update(obj,dt)
         pointTargets = getPointTargets(obj)
     end
 

@@ -21,20 +21,22 @@ p.nPulses = 1; % number of pulses
 
 % Point Target 
 % tp for targetParams
+%body
 p.targetPosition = [-500;0;0]; % position vector (m)
 p.targetVelocity = [50;0;0]; % velocity vector (m/s)
-p.meanRCS = 1; % mean radar cross section (m^2)
-
+p.bodyRCS = 1; % mean radar cross section (m^2)
+%blade
+p.bladeRCS = .1;
 p.length = 1;
-p.angle = 0;
 p.angularVelocity = 400 *2*pi/60;
-p.numberOfPointTargets = 1;
+p.angle = 0;
+p.numberOfPointTargetsPerBlade = 4;
 
 params = p;
 
 %% Initiate Objects
 radar = SimpleRadar(params);
-target = Blade(params);
+target = HelicopterTarget(params);
 enviroment = phased.FreeSpace(...
     'PropagationSpeed',p.c,...
     'OperatingFrequency',p.fc,...
