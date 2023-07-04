@@ -17,6 +17,11 @@ classdef PointTarget < handle
                 'OperatingFrequency',p.fc);
         end
 
+        function update(obj,newPosition, newVelocity)
+            obj.Position = newPosition;
+            obj.Velocity = newVelocity;
+        end
+
         function reflectedSignal = getReflectedSignal(obj,signal)
             reflectedSignal = obj.Target(signal);
         end

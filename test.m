@@ -19,7 +19,7 @@ p.T = 10e-6; % sweep time (s)
 p.prf = 1e4; % pulse repetition frequency (Hz)
 p.nPulses = 1; % number of pulses
 
-% Point Target 
+% Simple Body Target 
 % tp for targetParams
 %body
 p.targetPosition = [-500;0;0]; % position vector (m)
