@@ -21,17 +21,19 @@ rp.nPulses = 1; % number of pulses
 rp.position = [0;0;0]; % position vector (m)
 rp.velocity = [0;0;0]; % velocity vector (m/s)
 
-% Simple Body Target 
+% Spinning Body Target 
 % tp for targetParams
 tp.c = c;
 tp.fc = fc;
 tp.meanRCS = 1; % mean radar cross section (m^2)
-tp.position = [-500;0;0]; % position vector (m)
-tp.velocity = [50;0;0]; % velocity vector (m/s)
+tp.radiusVector = [0;1;0]; % radius vector (m^3)
+tp.angularVelocityVector = [0;0;400] *2*pi/60; % angular velocity vector (rad/s)
+tp.position = [-500;-1;0]; % position vector (m)
+tp.velocity = [0;0;0]; % velocity vector (m/s)
 
 %% Initiate Objects
 radar = SimpleRadar(rp);
-target = SimpleBodyTarget(tp);
+target = SpinningPointTarget(tp);
 enviroment = phased.FreeSpace(...
     'PropagationSpeed',c,...
     'OperatingFrequency',fc,...
