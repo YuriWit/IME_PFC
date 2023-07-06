@@ -31,7 +31,7 @@ classdef SimpleBodyTarget < AbstractBodyTarget
 
         function update(obj, dt)
             obj.Position = obj.Position + obj.Velocity * dt;
-            obj.Point.update(obj.Position, obj.Velocity);
+            obj.forceUpdate(obj.Position, obj.Velocity, dt);
         end
 
         function pointTargets = getPointTargets(obj)

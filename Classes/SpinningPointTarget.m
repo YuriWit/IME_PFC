@@ -45,8 +45,7 @@ classdef SpinningPointTarget < AbstractBodyTarget
 
         function update(obj, dt)
             obj.Position = obj.Position + obj.Velocity * dt;
-            obj.forceUpdate(obj.Position, obj.Velocity)
-            obj.Point.update(obj.Position, obj.Velocity);
+            obj.forceUpdate(obj.Position, obj.Velocity);
         end
 
         function pointTargets = getPointTargets(obj)

@@ -17,7 +17,7 @@ classdef Radar < handle
     methods
         function obj = Radar(p) % p = params
             obj.Time = 0;
-            obj.Position = p.radarPosition;
+            obj.Position = p.position;
             obj.Velocity = [0;0;0];
             obj.Waveform = p.Waveform;
             obj.Transmitter = p.Transmitter;
