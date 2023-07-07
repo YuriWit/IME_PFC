@@ -48,7 +48,7 @@ classdef SpinningPointTarget < AbstractBodyTarget
 
             newPosition = obj.Position + newrvect;
             newVelocity = obj.Velocity + cross(newrvect, wvect) * dt;
-            
+
             obj.Point.setPosition(newPosition);
             obj.Point.setVelocity(newVelocity);
         end

@@ -35,7 +35,8 @@ classdef SimpleBodyTarget < AbstractBodyTarget
         end
 
         function pointsUpdate(obj)
-            obj.Point.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Point.setPosition(obj.Position);
+            obj.Point.setVelocity(obj.Velocity);
         end
 
         function update(obj, dt)

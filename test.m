@@ -25,7 +25,6 @@ rp.velocity = [0;0;0]; % velocity vector (m/s)
 % tp for targetParams
 tp.c = c;
 tp.fc = fc;
-tp.meanRCS = 1; % mean body cross section (m^2)
 tp.meanBodyRCS = 1; % mean body cross section (m^2)
 tp.meanBladeRCS = .1; % mean blase cross section (m^2)
 tp.radiusVector = [0;1;0]; % radius vector (m^3)
@@ -35,7 +34,7 @@ tp.velocity = [0;0;0]; % velocity vector (m/s)
 
 %% Initiate Objects
 radar = SimpleRadar(rp);
-target = SpinningPointTarget(tp);
+target = HelicopterTarget(tp);
 enviroment = phased.FreeSpace(...
     'PropagationSpeed',c,...
     'OperatingFrequency',fc,...

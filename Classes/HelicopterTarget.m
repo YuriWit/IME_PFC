@@ -31,7 +31,7 @@ classdef HelicopterTarget < AbstractBodyTarget
             bodyParams.meanRCS = p.meanBodyRCS;
             bodyParams.position = [0;0;0];
             bodyParams.velocity = [0;0;0];
-            obj.Body = PointTarget(bodyParams);
+            obj.Body = SimpleBodyTarget(bodyParams);
 
             % Blades
             bladeParams.c = p.c;
@@ -77,6 +77,7 @@ classdef HelicopterTarget < AbstractBodyTarget
             obj.Blade2.forceRefrenceUpdate(obj.Position, obj.Velocity);
             obj.Blade3.forceRefrenceUpdate(obj.Position, obj.Velocity);
             obj.Blade4.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Body.pointsUpdate();
             obj.Blade1.pointsUpdate(dt);
             obj.Blade2.pointsUpdate(dt);
             obj.Blade3.pointsUpdate(dt);
@@ -89,7 +90,12 @@ classdef HelicopterTarget < AbstractBodyTarget
         end
 
         function pointTargets = getPointTargets(obj)
-            pointTargets = [obj.Body;obj.Blade1;obj.Blade2;obj.Blade3;obj.Blade4];
+            pointTargets = [...
+                obj.Body.getPointTargets(), ...
+                obj.Blade1.getPointTargets(), ...
+                obj.Blade2.getPointTargets(), ...
+                obj.Blade3.getPointTargets(), ...
+                obj.Blade4.getPointTargets()];
         end
     end
 end
