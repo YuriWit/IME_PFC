@@ -1,12 +1,11 @@
-classdef HelicopterTarget
+classdef HelicopterTarget < AbstractBodyTarget
     % Necessary parameter in p
     % p.c
     % p.fc
-    % p.meanRCS
-    % p.radiusVector
-    % p.angularVelocityVector
     % p.meanBodyRCS
     % p.meanBladeRCS
+    % p.radiusVector
+    % p.angularVelocityVector
     properties
         Body
         Blade1
@@ -46,49 +45,51 @@ classdef HelicopterTarget
             rotationVector = pi/2 * rotationVector/norm(rotationVector);
             rotationMatrix = rotvec2mat3d(rotationVector);
 
-            radiusVector = p.RadiusVector;
+            radiusVector = p.radiusVector;
             bladeParams.radiusVector = radiusVector;
             obj.Blade1 = SpinningPointTarget(bladeParams);
             
             radiusVector = rotationMatrix * radiusVector;
             bladeParams.radiusVector = radiusVector;
-            obj.Blade2 = PointTarget(bladeParams);
+            obj.Blade2 = SpinningPointTarget(bladeParams);
 
             radiusVector = rotationMatrix * radiusVector;
             bladeParams.radiusVector = radiusVector;
-            obj.Blade3 = PointTarget(bladeParams);
+            obj.Blade3 = SpinningPointTarget(bladeParams);
 
             radiusVector = rotationMatrix * radiusVector;
             bladeParams.radiusVector = radiusVector;
-            obj.Blade4 = PointTarget(bladeParams);
+            obj.Blade4 = SpinningPointTarget(bladeParams);
         end
 
-        function forceUpdate(obj,newPosition, newVelocity, dt)
+        function refrenceUpdate(obj, dt)
+            obj.Position = obj.Position + obj.Velocity * dt;
+        end
+
+        function forceRefrenceUpdate(obj, newPosition, newVelocity)
             obj.Position = newPosition;
             obj.Velocity = newVelocity;
-            
+        end
 
-            rvect = obj.RadiusVector;
-            wvect = obj.AngularVelocityVector;
-
-            newrvect = rvect + cross(rvect, wvect) * dt;
-            newrvect = newrvect .* norm(rvect)/norm(newrvect);
-
-            obj.RadiusVector = newrvect;
-
-            newPointPosition = newPosition + newrvect;
-            newPointVelocity = newVelocity + cross(newrvect, wvect) * dt;
-
-            obj.Point.update(newPointPosition, newPointVelocity)
+        function pointsUpdate(obj, dt)
+            obj.Body.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Blade1.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Blade2.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Blade3.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Blade4.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Blade1.pointsUpdate(dt);
+            obj.Blade2.pointsUpdate(dt);
+            obj.Blade3.pointsUpdate(dt);
+            obj.Blade4.pointsUpdate(dt);
         end
 
         function update(obj, dt)
-            obj.Position = obj.Position + obj.Velocity * dt;
-            obj.forceUpdate(obj.Position, obj.Velocity, dt);
+            obj.refrenceUpdate(dt);
+            obj.pointsUpdate(dt);
         end
 
         function pointTargets = getPointTargets(obj)
-            pointTargets = [obj.Point];
+            pointTargets = [obj.Body;obj.Blade1;obj.Blade2;obj.Blade3;obj.Blade4];
         end
     end
 end

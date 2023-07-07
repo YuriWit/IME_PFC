@@ -21,11 +21,13 @@ rp.nPulses = 1; % number of pulses
 rp.position = [0;0;0]; % position vector (m)
 rp.velocity = [0;0;0]; % velocity vector (m/s)
 
-% Spinning Body Target 
+% Helicopter Target 
 % tp for targetParams
 tp.c = c;
 tp.fc = fc;
-tp.meanRCS = 1; % mean radar cross section (m^2)
+tp.meanRCS = 1; % mean body cross section (m^2)
+tp.meanBodyRCS = 1; % mean body cross section (m^2)
+tp.meanBladeRCS = .1; % mean blase cross section (m^2)
 tp.radiusVector = [0;1;0]; % radius vector (m^3)
 tp.angularVelocityVector = [0;0;400] *2*pi/60; % angular velocity vector (rad/s)
 tp.position = [-500;-1;0]; % position vector (m)
