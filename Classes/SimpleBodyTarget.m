@@ -25,13 +25,22 @@ classdef SimpleBodyTarget < AbstractBodyTarget
             obj.Point = PointTarget(pointParams);
         end
 
-        function forceUpdate(obj,newPosition, newVelocity, dt)
-            obj.Point.update(newPosition, newVelocity);
+        function refrenceUpdate(obj, dt)
+            obj.Position = obj.Position + obj.Velocity * dt;
+        end
+
+        function forceRefrenceUpdate(obj, newPosition, newVelocity)
+            obj.Position = newPosition;
+            obj.Velocity = newVelocity;
+        end
+
+        function pointsUpdate(obj)
+            obj.Point.forceRefrenceUpdate(obj.Position, obj.Velocity);
         end
 
         function update(obj, dt)
-            obj.Position = obj.Position + obj.Velocity * dt;
-            obj.forceUpdate(obj.Position, obj.Velocity, dt);
+            obj.refrenceUpdate(dt);
+            obj.pointsUpdate();
         end
 
         function pointTargets = getPointTargets(obj)

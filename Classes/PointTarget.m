@@ -17,7 +17,7 @@ classdef PointTarget < handle
                 'OperatingFrequency',p.fc);
         end
 
-        function update(obj,newPosition, newVelocity)
+        function forceRefrenceUpdate(obj, newPosition, newVelocity)
             obj.Position = newPosition;
             obj.Velocity = newVelocity;
         end

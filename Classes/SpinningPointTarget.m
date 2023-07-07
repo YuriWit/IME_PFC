@@ -28,7 +28,16 @@ classdef SpinningPointTarget < AbstractBodyTarget
             obj.Point = PointTarget(pointParams);
         end
 
-        function forceUpdate(obj,newPosition, newVelocity, dt)
+        function refrenceUpdate(obj, dt)
+            obj.Position = obj.Position + obj.Velocity * dt;
+        end
+
+        function forceRefrenceUpdate(obj, newPosition, newVelocity)
+            obj.Position = newPosition;
+            obj.Velocity = newVelocity;
+        end
+
+        function pointsUpdate(obj, dt)
             rvect = obj.RadiusVector;
             wvect = obj.AngularVelocityVector;
 
@@ -37,15 +46,15 @@ classdef SpinningPointTarget < AbstractBodyTarget
 
             obj.RadiusVector = newrvect;
 
-            newPointPosition = newPosition + newrvect;
-            newPointVelocity = newVelocity + cross(newrvect, wvect) * dt;
+            newPosition = obj.Position + newrvect;
+            newVelocity = obj.Velocity + cross(newrvect, wvect) * dt;
 
-            obj.Point.update(newPointPosition, newPointVelocity)
+            obj.Point.forceRefrenceUpdate(newPosition, newVelocity)
         end
 
         function update(obj, dt)
-            obj.Position = obj.Position + obj.Velocity * dt;
-            obj.forceUpdate(obj.Position, obj.Velocity, dt);
+            obj.refrenceUpdate(dt);
+            obj.pointsUpdate(dt);
         end
 
         function pointTargets = getPointTargets(obj)
