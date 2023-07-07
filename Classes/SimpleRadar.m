@@ -1,9 +1,11 @@
 classdef SimpleRadar < Radar
+
     properties
         % no aditional properties
     end
     
     methods
+        
         % p     = parameters object
         % fc    = central frequency of chirp signal
         % B     = Bandwitdt
@@ -43,6 +45,8 @@ classdef SimpleRadar < Radar
 
             obj@Radar(p);
         end
+
     end
+
 end
 

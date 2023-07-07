@@ -1,75 +1,101 @@
-classdef HelicopterTarget < handle
-    
+classdef HelicopterTarget < AbstractBodyTarget
+    % Necessary parameter in p
+    % p.c
+    % p.fc
+    % p.meanBodyRCS
+    % p.meanBladeRCS
+    % p.radiusVector
+    % p.angularVelocityVector
     properties
+        Body
+        Blade1
+        Blade2
+        Blade3
+        Blade4
         Position
         Velocity
-        Body
-        Blades
+        RadiusVector
+        AngularVelocityVector
     end
     
     methods
         function obj = HelicopterTarget(p)
-            bp.c = p.c;
-            bp.fc = p.fc;
-            bp.meanRCS = p.meanRCS;
-            Body = PointTraget(bp);
-            params.meanRCS = [params.bodyRadarCrossSection ...
-                params.bladeRadarCrossSection*ones(1,params.numberOfBlades)];
-            obj@RadarTarget(params);
-            obj.NumberOfBlades = params.numberOfBlades;
-            obj.BladeLength = params.bladeLength;
-            obj.BladeAngularVelocity = params.bladeAngularVelocity;
+            obj.Position = p.position;
+            obj.Velocity = p.velocity;
+            obj.RadiusVector = p.radiusVector;
+            obj.AngularVelocityVector = p.angularVelocityVector;
+
+            % Body
+            bodyParams.c = p.c;
+            bodyParams.fc = p.fc;
+            bodyParams.meanRCS = p.meanBodyRCS;
+            bodyParams.position = [0;0;0];
+            bodyParams.velocity = [0;0;0];
+            obj.Body = SimpleBodyTarget(bodyParams);
+
+            % Blades
+            bladeParams.c = p.c;
+            bladeParams.fc = p.fc;
+            bladeParams.meanRCS = p.meanBladeRCS;
+            bladeParams.position = [0;0;0];
+            bladeParams.velocity = [0;0;0];
+            bladeParams.angularVelocityVector = p.angularVelocityVector;
+
+            rotationVector = p.angularVelocityVector;
+            rotationVector = pi/2 * rotationVector/norm(rotationVector);
+            rotationMatrix = rotvec2mat3d(rotationVector);
+
+            radiusVector = p.radiusVector;
+            bladeParams.radiusVector = radiusVector;
+            obj.Blade1 = SpinningPointTarget(bladeParams);
+            
+            radiusVector = rotationMatrix * radiusVector;
+            bladeParams.radiusVector = radiusVector;
+            obj.Blade2 = SpinningPointTarget(bladeParams);
+
+            radiusVector = rotationMatrix * radiusVector;
+            bladeParams.radiusVector = radiusVector;
+            obj.Blade3 = SpinningPointTarget(bladeParams);
+
+            radiusVector = rotationMatrix * radiusVector;
+            bladeParams.radiusVector = radiusVector;
+            obj.Blade4 = SpinningPointTarget(bladeParams);
         end
 
-        function pointTargets = getPointTargets(obj, t)
-            pointTargets = zeros(100,3,2);
+        function refrenceUpdate(obj, dt)
+            obj.Position = obj.Position + obj.Velocity * dt;
         end
 
-        function [scattersPosition, scattersVelocity] = targetMotion(obj, dt)
-            obj.Time = obj.Time + dt;
-            [bodyPosition, bodyVelocity] = obj.Platform(dt);
-            
-            % Initialize cell arrays for positions and velocities
-            scattersPosition = cell(1, obj.NumberOfBlades+1);
-            scattersVelocity = cell(1, obj.NumberOfBlades+1);
-        
-            % The first scatter is the helicopter body
-            scattersPosition{1} = bodyPosition;
-            scattersVelocity{1} = bodyVelocity;
-            
-            % Calculate the rotation matrix from the angular velocity vector
-            rotationAxis = obj.BladeAngularVelocity / norm(obj.BladeAngularVelocity);  % normalize to get rotation axis
-            rotationMatrix = axang2rotm([rotationAxis', 0]);  % 0 angle since we just want to align frames
-            
-            % Calculate the position and velocity of each blade tip
-            for i = 1:obj.NumberOfBlades
-                % The blade rotates in a circle around the body
-                angle = norm(obj.BladeAngularVelocity) * obj.Time + (i-1) * (2*pi/obj.NumberOfBlades);  % Add phase offset for each blade
-                positionOffset = obj.BladeLength * [cos(angle); sin(angle); 0];  % Blades rotate in x-y plane in body frame
-        
-                % Transform position offset to global frame and add to body position
-                positionOffsetGlobal = rotationMatrix * positionOffset;
-                bladePosition = bodyPosition + positionOffsetGlobal;
-        
-                % The velocity is the derivative of the position
-                velocityOffset = norm(obj.BladeAngularVelocity) * obj.BladeLength * [-sin(angle); cos(angle); 0];  % The derivative of cos is -sin and vice versa
-                velocityOffsetGlobal = rotationMatrix * velocityOffset;
-                bladeVelocity = bodyVelocity + velocityOffsetGlobal;
-        
-                % Store in cell arrays
-                scattersPosition{i+1} = bladePosition;
-                scattersVelocity{i+1} = bladeVelocity;
-            end
+        function forceRefrenceUpdate(obj, newPosition, newVelocity)
+            obj.Position = newPosition;
+            obj.Velocity = newVelocity;
         end
 
+        function pointsUpdate(obj, dt)
+            obj.Body.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Blade1.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Blade2.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Blade3.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Blade4.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Body.pointsUpdate();
+            obj.Blade1.pointsUpdate(dt);
+            obj.Blade2.pointsUpdate(dt);
+            obj.Blade3.pointsUpdate(dt);
+            obj.Blade4.pointsUpdate(dt);
+        end
 
-        
-        function returnVal = getScattersMotion(obj)
-            numScatters = length(obj.Scatters.MeanRCS);
-            returnVal = zeros(numScatters,3,2);
-            for i=1:numScatters
-                returnVal(i,:,:) = [obj.Position obj.Velocity];
-            end
+        function update(obj, dt)
+            obj.refrenceUpdate(dt);
+            obj.pointsUpdate(dt);
+        end
+
+        function pointTargets = getPointTargets(obj)
+            pointTargets = [...
+                obj.Body.getPointTargets(), ...
+                obj.Blade1.getPointTargets(), ...
+                obj.Blade2.getPointTargets(), ...
+                obj.Blade3.getPointTargets(), ...
+                obj.Blade4.getPointTargets()];
         end
     end
 end

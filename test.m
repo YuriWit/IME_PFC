@@ -5,56 +5,57 @@ rng(2023);
 %% Parameters
 
 % Global Params 
-% gp for globalParams
-p.c = physconst('LightSpeed'); % speed of light (m/s)
+c = physconst('LightSpeed'); % speed of light (m/s)
+fc = 3e9; %    central frequency (Hz)
+fs = 20e6; % sample rate (Hz) 
 
 % Simple Radar 
 % rp for radarParams
-p.radarPosition = [0;0;0]; % position vector (m)
-p.radarVelocity = [0;0;0]; % velocity vector (m/s)
-p.fs = 20e6; % sample rate (Hz) 
-p.fc = 3e9; %    central frequency (Hz)
-p.B = 5e6; % sweep bandwidth (Hz)
-p.T = 10e-6; % sweep time (s)
-p.prf = 1e4; % pulse repetition frequency (Hz)
-p.nPulses = 1; % number of pulses
+rp.c = c;
+rp.fc = fc;
+rp.fs = fs;
+rp.B = 5e6; % sweep bandwidth (Hz)
+rp.T = 10e-6; % sweep time (s)
+rp.prf = 1e4; % pulse repetition frequency (Hz)
+rp.nPulses = 1; % number of pulses
+rp.position = [0;0;0]; % position vector (m)
+rp.velocity = [0;0;0]; % velocity vector (m/s)
 
-% Point Target 
+% Helicopter Target 
 % tp for targetParams
-p.targetPosition = [-500;0;0]; % position vector (m)
-p.targetVelocity = [50;0;0]; % velocity vector (m/s)
-p.meanRCS = 1; % mean radar cross section (m^2)
-p.p1.Position = [100;0;0];
-p.p1.Velocity = [50;0;0];
-p.p2.Position = [-100;0;0];
-p.p2.Velocity = [-25;0;0];
-
-params = p;
+tp.c = c;
+tp.fc = fc;
+tp.meanBodyRCS = 1; % mean body cross section (m^2)
+tp.meanBladeRCS = .1; % mean blase cross section (m^2)
+tp.radiusVector = [0;1;0]; % radius vector (m^3)
+tp.angularVelocityVector = [0;0;400] *2*pi/60; % angular velocity vector (rad/s)
+tp.position = [-500;-1;0]; % position vector (m)
+tp.velocity = [0;0;0]; % velocity vector (m/s)
 
 %% Initiate Objects
-radar = SimpleRadar(params);
-target = SimpleTarget(params);
+radar = SimpleRadar(rp);
+target = HelicopterTarget(tp);
 enviroment = phased.FreeSpace(...
-    'PropagationSpeed',p.c,...
-    'OperatingFrequency',p.fc,...
+    'PropagationSpeed',c,...
+    'OperatingFrequency',fc,...
     'TwoWayPropagation',true,...
-    'SampleRate',p.fs);
+    'SampleRate',fs);
 
 %% Test Radar
 if false
     signal = real(radar.Waveform());
-    nSamples = p.fs*p.T;
+    nSamples = rp.fs*rp.T;
     figure
     plot(signal(1:nSamples))
 
     signal = radar.getTransmittedSignal(0);
     figure
-    spectrogram(signal(1:nSamples),hamming(64),60,[],p.fc,'yaxis');
+    spectrogram(signal(1:nSamples),hamming(64),60,[],rp.fc,'yaxis');
 end
 %% Transmit
 numPulses = 64;
 receivedSignal = zeros(length(radar.Waveform()),numPulses);
-dt = 1/p.prf;
+dt = 1/rp.prf;
 for i=1:numPulses
     % update bodies motion
     target.update(dt)
@@ -88,12 +89,12 @@ for i=1:numPulses
     end
 end
 rangeDopplerResponse = phased.RangeDopplerResponse(...
-    'PropagationSpeed', p.c,...
-    'SampleRate',p.fs,...
+    'PropagationSpeed', rp.c,...
+    'SampleRate',rp.fs,...
     'DopplerFFTLengthSource','Property',...
     'DopplerFFTLength',128,...
     'DopplerOutput','Speed',...
-    'OperatingFrequency',p.fc);
+    'OperatingFrequency',rp.fc);
 
 filter = getMatchedFilter(radar.Waveform);
 
