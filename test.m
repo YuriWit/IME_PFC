@@ -16,33 +16,27 @@ rp.fc = fc;
 rp.fs = fs;
 rp.B = 5e6; % sweep bandwidth (Hz)
 rp.T = 10e-6; % sweep time (s)
-rp.prf = 1e4; % pulse repetition frequency (Hz)
+rp.prf = 2e4; % pulse repetition frequency (Hz)
 rp.nPulses = 1; % number of pulses
 rp.position = [0;0;0]; % position vector (m)
 rp.velocity = [0;0;0]; % velocity vector (m/s)
 
-% Helicopter Target 
+% Two Blade Rotor Target 
 % tp for targetParams
 tp.c = c;
 tp.fc = fc;
 tp.meanBodyRCS = 1; % mean body cross section (m^2)
-tp.meanBladeRCS = .1; % mean blase cross section (m^2)
-tp.radiusVector = [0;1;0]; % radius vector (m^3)
-tp.angularVelocityVector = [0;0;400] *2*pi/60; % angular velocity vector (rad/s)
-tp.radiusVector1 = [0;1;0];
-tp.radiusVector2 = [0;1;0];
-tp.radiusVector3 = [0;1;0];
-tp.radiusVector4 = [0;1;0];
-tp.angularVelocityVector1 = [0;0;1500] *2*pi/60;
-tp.angularVelocityVector2 = -1*[0;0;1500] *2*pi/60;
-tp.angularVelocityVector3 = [0;0;1500] *2*pi/60;
-tp.angularVelocityVector4 = -1*[0;0;1500] *2*pi/60;
-tp.position = [-500;-1;0]; % position vector (m)
+tp.meanBladeRCS = 1; % mean blase cross section (m^2)
+
+tp.position = [-100;0;0]; % position vector (m)
 tp.velocity = [0;0;0]; % velocity vector (m/s)
+
+tp.radiusVector = [0;.1;0]; % radius vector (m^3)
+tp.angularVelocityVector = [0;0;3000] *2*pi/60; % angular velocity vector (rad/s)
 
 %% Initiate Objects
 radar = SimpleRadar(rp);
-target = QuadcopterTarget(tp);
+target = TwoBladeRotorTarget(tp);
 enviroment = phased.FreeSpace(...
     'PropagationSpeed',c,...
     'OperatingFrequency',fc,...
@@ -61,7 +55,7 @@ if false
     spectrogram(signal(1:nSamples),hamming(64),60,[],rp.fc,'yaxis');
 end
 %% Transmit
-numPulses = 64;
+numPulses = 1e4;
 receivedSignal = zeros(length(radar.Waveform()),numPulses);
 dt = 1/rp.prf;
 for i=1:numPulses
@@ -108,7 +102,7 @@ filter = getMatchedFilter(radar.Waveform);
 
 %% Plots
 
-
+% Range Doppler Response
 figure
 plotResponse(...
     rangeDopplerResponse,...
@@ -118,12 +112,10 @@ ylim([0 1000])
 xlim([-100 100])
 
 
-
-
-
-
-
-
-
+figure
+mf  = phased.MatchedFilter('Coefficients',filter);
+ymf = mf(receivedSignal);
+[~,ridx] = max(sum(abs(ymf),2)); 
+pspectrum(ymf(ridx,:),rp.prf,'spectrogram')
 
 
