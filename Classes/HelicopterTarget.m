@@ -7,23 +7,17 @@ classdef HelicopterTarget < AbstractBodyTarget
     % p.radiusVector
     % p.angularVelocityVector
     properties
-        Body
-        Blade1
-        Blade2
-        Blade3
-        Blade4
         Position
         Velocity
-        RadiusVector
-        AngularVelocityVector
+
+        Body
+        Rotor
     end
     
     methods
         function obj = HelicopterTarget(p)
             obj.Position = p.position;
             obj.Velocity = p.velocity;
-            obj.RadiusVector = p.radiusVector;
-            obj.AngularVelocityVector = p.angularVelocityVector;
 
             % Body
             bodyParams.c = p.c;
@@ -33,55 +27,33 @@ classdef HelicopterTarget < AbstractBodyTarget
             bodyParams.velocity = [0;0;0];
             obj.Body = SimpleBodyTarget(bodyParams);
 
-            % Blades
-            bladeParams.c = p.c;
-            bladeParams.fc = p.fc;
-            bladeParams.meanRCS = p.meanBladeRCS;
-            bladeParams.position = [0;0;0];
-            bladeParams.velocity = [0;0;0];
-            bladeParams.angularVelocityVector = p.angularVelocityVector;
-
-            rotationVector = p.angularVelocityVector;
-            rotationVector = pi/2 * rotationVector/norm(rotationVector);
-            rotationMatrix = rotvec2mat3d(rotationVector);
-
-            radiusVector = p.radiusVector;
-            bladeParams.radiusVector = radiusVector;
-            obj.Blade1 = SpinningPointTarget(bladeParams);
-            
-            radiusVector = rotationMatrix * radiusVector;
-            bladeParams.radiusVector = radiusVector;
-            obj.Blade2 = SpinningPointTarget(bladeParams);
-
-            radiusVector = rotationMatrix * radiusVector;
-            bladeParams.radiusVector = radiusVector;
-            obj.Blade3 = SpinningPointTarget(bladeParams);
-
-            radiusVector = rotationMatrix * radiusVector;
-            bladeParams.radiusVector = radiusVector;
-            obj.Blade4 = SpinningPointTarget(bladeParams);
+            % Rotor
+            rotorParams.c = p.c;
+            rotorParams.fc = p.fc;
+            rotorParams.meanBladeRCS = p.meanBladeRCS;
+            rotorParams.position = [0;0;0];
+            rotorParams.velocity = [0;0;0];
+            rotorParams.radiusVector = p.radiusVector;
+            rotorParams.angularVelocityVector = p.angularVelocityVector;
+            obj.Rotor = TwoBladeRotorTarget(rotorParams);
         end
 
         function refrenceUpdate(obj, dt)
             obj.Position = obj.Position + obj.Velocity * dt;
+            obj.Body.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Rotor.forceRefrenceUpdate(obj.Position, obj.Velocity);
         end
 
         function forceRefrenceUpdate(obj, newPosition, newVelocity)
             obj.Position = newPosition;
             obj.Velocity = newVelocity;
+            obj.Body.forceRefrenceUpdate(obj.Position, obj.Velocity);
+            obj.Rotor.forceRefrenceUpdate(obj.Position, obj.Velocity);
         end
 
         function pointsUpdate(obj, dt)
-            obj.Body.forceRefrenceUpdate(obj.Position, obj.Velocity);
-            obj.Blade1.forceRefrenceUpdate(obj.Position, obj.Velocity);
-            obj.Blade2.forceRefrenceUpdate(obj.Position, obj.Velocity);
-            obj.Blade3.forceRefrenceUpdate(obj.Position, obj.Velocity);
-            obj.Blade4.forceRefrenceUpdate(obj.Position, obj.Velocity);
             obj.Body.pointsUpdate();
-            obj.Blade1.pointsUpdate(dt);
-            obj.Blade2.pointsUpdate(dt);
-            obj.Blade3.pointsUpdate(dt);
-            obj.Blade4.pointsUpdate(dt);
+            obj.Rotor.pointsUpdate(dt);
         end
 
         function update(obj, dt)
@@ -92,10 +64,7 @@ classdef HelicopterTarget < AbstractBodyTarget
         function pointTargets = getPointTargets(obj)
             pointTargets = [...
                 obj.Body.getPointTargets(), ...
-                obj.Blade1.getPointTargets(), ...
-                obj.Blade2.getPointTargets(), ...
-                obj.Blade3.getPointTargets(), ...
-                obj.Blade4.getPointTargets()];
+                obj.Rotor.getPointTargets()];
         end
     end
 end

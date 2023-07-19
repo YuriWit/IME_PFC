@@ -21,22 +21,22 @@ rp.nPulses = 1; % number of pulses
 rp.position = [0;0;0]; % position vector (m)
 rp.velocity = [0;0;0]; % velocity vector (m/s)
 
-% Two Blade Rotor Target 
+% Helicopter Target two blades main rotor no tail totor
 % tp for targetParams
 tp.c = c;
 tp.fc = fc;
 tp.meanBodyRCS = 1; % mean body cross section (m^2)
-tp.meanBladeRCS = 1; % mean blase cross section (m^2)
+tp.meanBladeRCS = .1; % mean blase cross section (m^2)
 
-tp.position = [-100;0;0]; % position vector (m)
+tp.position = [-100;100;0]; % position vector (m)
 tp.velocity = [0;0;0]; % velocity vector (m/s)
 
-tp.radiusVector = [0;.1;0]; % radius vector (m^3)
-tp.angularVelocityVector = [0;0;3000] *2*pi/60; % angular velocity vector (rad/s)
+tp.radiusVector = [0;2;0]; % radius vector (m^3)
+tp.angularVelocityVector = [0;0;400] *2*pi/60; % angular velocity vector (rad/s)
 
 %% Initiate Objects
 radar = SimpleRadar(rp);
-target = TwoBladeRotorTarget(tp);
+target = HelicopterTarget(tp);
 enviroment = phased.FreeSpace(...
     'PropagationSpeed',c,...
     'OperatingFrequency',fc,...
