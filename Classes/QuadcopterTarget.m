@@ -1,51 +1,27 @@
 classdef QuadcopterTarget < AbstractBodyTarget
-    % Necessary parameter in p
-    % p.c
-    % p.fc
-    % p.meanBodyRCS
-    % p.meanBladeRCS
-    % p.radiusVector1
-    % p.radiusVector2
-    % p.radiusVector3
-    % p.radiusVector4
-    % p.angularVelocityVector1
-    % p.angularVelocityVector2
-    % p.angularVelocityVector3
-    % p.angularVelocityVector4
     properties
-        Body
-        Prop1Blade1
-        Prop1Blade2
-        Prop2Blade1
-        Prop2Blade2
-        Prop3Blade1
-        Prop3Blade2
-        Prop4Blade1
-        Prop4Blade2
         Position
         Velocity
-        RadiusVector1
-        RadiusVector2
-        RadiusVector3
-        RadiusVector4
-        AngularVelocityVector1
-        AngularVelocityVector2
-        AngularVelocityVector3
-        AngularVelocityVector4
+        Rotor1Position
+        Rotor2Position
+        Rotor3Position
+        Rotor4Position
+
+        Body
+        Rotor1
+        Rotor2
+        Rotor3
+        Rotor4
     end
     
     methods
         function obj = QuadcopterTarget(p)
             obj.Position = p.position;
             obj.Velocity = p.velocity;
-            obj.RadiusVector1 = p.radiusVector1;
-            obj.RadiusVector2 = p.radiusVector2;
-            obj.RadiusVector3 = p.radiusVector3;
-            obj.RadiusVector4 = p.radiusVector4;
-            obj.AngularVelocityVector1 = p.angularVelocityVector1;
-            obj.AngularVelocityVector2 = p.angularVelocityVector1;
-            obj.AngularVelocityVector3 = p.angularVelocityVector1;
-            obj.AngularVelocityVector4 = p.angularVelocityVector1;
+            obj.Rotor1Position = p.rotor1RelativePosition;
+            obj.Rotor2Position = p.rotor2RelativePosition;
+            obj.Rotor3Position = p.rotor3RelativePosition;
+            obj.Rotor4Position = p.rotor4RelativePosition;
 
             % Body
             bodyParams.c = p.c;
@@ -55,104 +31,63 @@ classdef QuadcopterTarget < AbstractBodyTarget
             bodyParams.velocity = [0;0;0];
             obj.Body = SimpleBodyTarget(bodyParams);
 
-            % Prolepers
-            bladeParams.c = p.c;
-            bladeParams.fc = p.fc;
-            bladeParams.meanRCS = p.meanBladeRCS;
-            
-            % Proleper 1
-            bladeParams.position = [.2;0;0];
-            bladeParams.velocity = [0;0;0];
-            rotationVector = p.angularVelocityVector1;
-            rotationVector = pi * rotationVector/norm(rotationVector);
-            rotationMatrix = rotvec2mat3d(rotationVector);
-            radiusVector = p.radiusVector1;
-            
-            bladeParams.angularVelocityVector = p.angularVelocityVector1;
-            bladeParams.radiusVector = radiusVector;
-            obj.Prop1Blade1 = SpinningPointTarget(bladeParams);
-            
-            radiusVector = rotationMatrix * radiusVector;
-            bladeParams.radiusVector = radiusVector;
-            obj.Prop1Blade2 = SpinningPointTarget(bladeParams);
-            
-            % Propeler 2
-            bladeParams.position = [0;.2;0];
-            bladeParams.velocity = [0;0;0];
-            rotationVector = p.angularVelocityVector2;
-            rotationVector = pi * rotationVector/norm(rotationVector);
-            rotationMatrix = rotvec2mat3d(rotationVector);
-            radiusVector = p.radiusVector2;
+            % Rotors
+            rotorParams.c = p.c;
+            rotorParams.fc = p.fc;
+            rotorParams.meanBladeRCS = p.meanBladeRCS;
+            rotorParams.position = [0;0;0];
+            rotorParams.velocity = [0;0;0];
+    
+            % Rotor 1
+            rotorParams.radiusVector = p.rotor1RadiusVector;
+            rotorParams.angularVelocityVector = p.rotor1AngularVelocityVector;
+            obj.Rotor1 = TwoBladeRotorTarget(rotorParams);
 
-            bladeParams.angularVelocityVector = p.angularVelocityVector2;
-            bladeParams.radiusVector = radiusVector;
-            obj.Prop2Blade1 = SpinningPointTarget(bladeParams);
-            
-            radiusVector = rotationMatrix * radiusVector;
-            bladeParams.radiusVector = radiusVector;
-            obj.Prop2Blade2 = SpinningPointTarget(bladeParams);
-            
-            % Propeler 3
-            bladeParams.position = [-.2;0;0];
-            bladeParams.velocity = [0;0;0];
-            rotationVector = p.angularVelocityVector3;
-            rotationVector = pi * rotationVector/norm(rotationVector);
-            rotationMatrix = rotvec2mat3d(rotationVector);
-            radiusVector = p.radiusVector3;
+            % Rotor 2
+            rotorParams.radiusVector = p.rotor2RadiusVector;
+            rotorParams.angularVelocityVector = p.rotor2AngularVelocityVector;
+            obj.Rotor2 = TwoBladeRotorTarget(rotorParams);
 
-            bladeParams.angularVelocityVector = p.angularVelocityVector3;
-            bladeParams.radiusVector = radiusVector;
-            obj.Prop3Blade1 = SpinningPointTarget(bladeParams);
-            
-            radiusVector = rotationMatrix * radiusVector;
-            bladeParams.radiusVector = radiusVector;
-            obj.Prop3Blade2 = SpinningPointTarget(bladeParams);
-            
-            % Propeler 4
-            bladeParams.position = [0;-.2;0];
-            bladeParams.velocity = [0;0;0];
-            rotationVector = p.angularVelocityVector4;
-            rotationVector = pi * rotationVector/norm(rotationVector);
-            rotationMatrix = rotvec2mat3d(rotationVector);
-            radiusVector = p.radiusVector4;
+            % Rotor 3
+            rotorParams.radiusVector = p.rotor3RadiusVector;
+            rotorParams.angularVelocityVector = p.rotor3AngularVelocityVector;
+            obj.Rotor3 = TwoBladeRotorTarget(rotorParams);
 
-            bladeParams.angularVelocityVector = p.angularVelocityVector4;
-            bladeParams.radiusVector = radiusVector;
-            obj.Prop4Blade1 = SpinningPointTarget(bladeParams);
-            
-            radiusVector = rotationMatrix * radiusVector;
-            bladeParams.radiusVector = radiusVector;
-            obj.Prop4Blade2 = SpinningPointTarget(bladeParams);
+            % Rotor 4
+            rotorParams.radiusVector = p.rotor4RadiusVector;
+            rotorParams.angularVelocityVector = p.rotor4AngularVelocityVector;
+            obj.Rotor4 = TwoBladeRotorTarget(rotorParams);
         end
 
         function refrenceUpdate(obj, dt)
             obj.Position = obj.Position + obj.Velocity * dt;
+            p = obj.Position;
+            v = obj.Velocity;
+            obj.Body.forceRefrenceUpdate(p, v);
+            obj.Rotor1.forceRefrenceUpdate(p + obj.Rotor1Position, v);
+            obj.Rotor2.forceRefrenceUpdate(p + obj.Rotor2Position, v);
+            obj.Rotor3.forceRefrenceUpdate(p + obj.Rotor3Position, v);
+            obj.Rotor4.forceRefrenceUpdate(p + obj.Rotor4Position, v);
         end
 
         function forceRefrenceUpdate(obj, newPosition, newVelocity)
             obj.Position = newPosition;
             obj.Velocity = newVelocity;
+            p = obj.Position;
+            v = obj.Velocity;
+            obj.Body.forceRefrenceUpdate(p, v);
+            obj.Rotor1.forceRefrenceUpdate(p + obj.Rotor1Position, v);
+            obj.Rotor2.forceRefrenceUpdate(p + obj.Rotor2Position, v);
+            obj.Rotor3.forceRefrenceUpdate(p + obj.Rotor3Position, v);
+            obj.Rotor4.forceRefrenceUpdate(p + obj.Rotor4Position, v);
         end
 
         function pointsUpdate(obj, dt)
-            obj.Body.forceRefrenceUpdate(obj.Position, obj.Velocity);
-            obj.Prop1Blade1.forceRefrenceUpdate(obj.Position, obj.Velocity);
-            obj.Prop1Blade2.forceRefrenceUpdate(obj.Position, obj.Velocity);
-            obj.Prop2Blade1.forceRefrenceUpdate(obj.Position, obj.Velocity);
-            obj.Prop2Blade2.forceRefrenceUpdate(obj.Position, obj.Velocity);
-            obj.Prop3Blade1.forceRefrenceUpdate(obj.Position, obj.Velocity);
-            obj.Prop3Blade2.forceRefrenceUpdate(obj.Position, obj.Velocity);
-            obj.Prop4Blade1.forceRefrenceUpdate(obj.Position, obj.Velocity);
-            obj.Prop4Blade2.forceRefrenceUpdate(obj.Position, obj.Velocity);
             obj.Body.pointsUpdate();
-            obj.Prop1Blade1.pointsUpdate(dt);
-            obj.Prop1Blade2.pointsUpdate(dt);
-            obj.Prop2Blade1.pointsUpdate(dt);
-            obj.Prop2Blade2.pointsUpdate(dt);
-            obj.Prop3Blade1.pointsUpdate(dt);
-            obj.Prop3Blade2.pointsUpdate(dt);
-            obj.Prop4Blade1.pointsUpdate(dt);
-            obj.Prop4Blade2.pointsUpdate(dt);
+            obj.Rotor1.pointsUpdate(dt);
+            obj.Rotor2.pointsUpdate(dt);
+            obj.Rotor3.pointsUpdate(dt);
+            obj.Rotor4.pointsUpdate(dt);
         end
 
         function update(obj, dt)
@@ -163,14 +98,10 @@ classdef QuadcopterTarget < AbstractBodyTarget
         function pointTargets = getPointTargets(obj)
             pointTargets = [...
                 obj.Body.getPointTargets(), ...
-                obj.Prop1Blade1.getPointTargets(), ...
-                obj.Prop1Blade2.getPointTargets(), ...
-                obj.Prop2Blade1.getPointTargets(), ...
-                obj.Prop2Blade2.getPointTargets(), ...
-                obj.Prop3Blade1.getPointTargets(), ...
-                obj.Prop3Blade2.getPointTargets(), ...
-                obj.Prop4Blade1.getPointTargets(), ...
-                obj.Prop4Blade2.getPointTargets()];
+                obj.Rotor1.getPointTargets(), ...
+                obj.Rotor2.getPointTargets(), ...
+                obj.Rotor3.getPointTargets(), ...
+                obj.Rotor4.getPointTargets()];
         end
     end
 end

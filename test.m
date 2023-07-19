@@ -28,15 +28,28 @@ tp.fc = fc;
 tp.meanBodyRCS = 1; % mean body cross section (m^2)
 tp.meanBladeRCS = .1; % mean blase cross section (m^2)
 
-tp.position = [-100;100;0]; % position vector (m)
+tp.position = [-50;0;0]; % position vector (m)
 tp.velocity = [0;0;0]; % velocity vector (m/s)
 
-tp.radiusVector = [0;2;0]; % radius vector (m^3)
-tp.angularVelocityVector = [0;0;400] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor1RelativePosition = .1*[1;1;0]; % relative position velocity vector (m/s)
+tp.rotor2RelativePosition = .1*[-1;1;0]; % relative position velocity vector (m/s)
+tp.rotor3RelativePosition = .1*[-1;-1;0]; % relative position velocity vector (m/s)
+tp.rotor4RelativePosition = .1*[1;-1;0]; % relative position velocity vector (m/s)
+
+r = .1;
+tp.rotor1RadiusVector = r*[cos(30*pi/180);sin(30*pi/180);0]; % radius vector (m^3)
+tp.rotor2RadiusVector = r*[cos(22*pi/180);sin(22*pi/180);0]; % radius vector (m^3)
+tp.rotor3RadiusVector = r*[cos(56*pi/180);sin(56*pi/180);0]; % radius vector (m^3)
+tp.rotor4RadiusVector = r*[cos(12*pi/180);sin(12*pi/180);0]; % radius vector (m^3)
+
+tp.rotor1AngularVelocityVector = [0;0;3000] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor2AngularVelocityVector = [0;0;1] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor3AngularVelocityVector = [0;0;1] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor4AngularVelocityVector = [0;0;1] *2*pi/60; % angular velocity vector (rad/s)
 
 %% Initiate Objects
 radar = SimpleRadar(rp);
-target = HelicopterTarget(tp);
+target = QuadcopterTarget(tp);
 enviroment = phased.FreeSpace(...
     'PropagationSpeed',c,...
     'OperatingFrequency',fc,...
@@ -111,11 +124,14 @@ plotResponse(...
 ylim([0 1000])
 xlim([-100 100])
 
-
+% Spectrograma
 figure
 mf  = phased.MatchedFilter('Coefficients',filter);
 ymf = mf(receivedSignal);
 [~,ridx] = max(sum(abs(ymf),2)); 
 pspectrum(ymf(ridx,:),rp.prf,'spectrogram')
+
+% 
+
 
 
