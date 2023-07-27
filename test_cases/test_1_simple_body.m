@@ -23,7 +23,7 @@ rp.fc = fc;
 rp.fs = fs;
 rp.B = 5e6; % sweep bandwidth (Hz)
 rp.T = 10e-6; % sweep time (s)
-rp.prf = 2e4; % pulse repetition frequency (Hz)
+rp.prf = 2e3; % pulse repetition frequency (Hz)
 rp.nPulses = 1; % number of pulses
 rp.position = [0;0;0]; % position vector (m)
 rp.velocity = [0;0;0]; % velocity vector (m/s)
@@ -35,7 +35,7 @@ tp.fc = fc;
 tp.meanRCS = 10; % mean radar cross section (m^2)
 
 tp.position = [-100;0;0]; % position vector (m)
-tp.velocity = [100;0;0]; % velocity vector (m/s)
+tp.velocity = [10;0;0]; % velocity vector (m/s)
 
 %% Initiate Objects
 radar = SimpleRadar(rp);
@@ -47,7 +47,7 @@ enviroment = phased.FreeSpace(...
     'SampleRate',fs);
 
 %% Transmit
-numPulses = 4096;
+numPulses = 100;
 receivedSignal = zeros(length(radar.Waveform()),numPulses);
 dt = 1/rp.prf;
 for i=1:numPulses
@@ -89,43 +89,44 @@ mf = phased.MatchedFilter('Coefficients', filter);
 ymf = mf(receivedSignal);
 
 % fast time response
-figure;
-t = (1:1:length(ymf(:,1)))*fs;
-plot(log10(abs(ymf(:,1)).^2));
-xlabel('Frequency [Hz]');
-ylabel('h(f) in dB');
+figure(1);
+t = (1:1:length(ymf(:,1)))/fs;
+plot(t, 10*log10(abs(ymf(:,1)).^2));
+xlabel('Time [s]');
+ylabel('CCF in dB');
 title('Fast time response');
 
 % slow time response
-figure;
-t = (1:1:length(ymf(1,:)))*fs;
-plot(10*log10(max(abs(fft(ymf')).^2)));
+figure(2);
+FFTymf = fft(ymf');%FFT of each column
+maxFFTymf = max(abs(FFTymf));
+plot(t, 10*log10(abs(maxFFTymf).^2));
 xlabel('Time [ms]');
 ylabel('h(t)');
 title('Slow time response');
 
 % spectrum
-figure;
+figure(3);
+[~,indMax] = max(abs(ymf(:,1)));
+plot(linspace(-fs/2,fs/2,rp.T*fs)/1e6,10*log10(abs(fftshift(fft(receivedSignal(indMax-rp.T*fs+1:indMax,1))))))
 xlabel('Frequency [MHz]');
 ylabel('Power[dBFS]');
 title('Spectrum');
 
-% stft
-figure;
-xlabel('Time [ms]');
-ylabel('Doppler velocity [m/s]');
+%Doppler response
+figure(4);
+plot(10*log10(abs(fftshift(fft(receivedSignal(1:indMax,1))))))
+xlabel('Frequency [Hz]');
+ylabel('Power[dB]');
 title('Doppler response');
 
-
-
-
 % range doppler response
-figure;
+figure(5);
 rangeDopplerResponse = phased.RangeDopplerResponse(...
     'PropagationSpeed', rp.c,...
     'SampleRate',rp.fs,...
     'DopplerFFTLengthSource','Property',...
-    'DopplerFFTLength',2048,...
+    'DopplerFFTLength',128,...
     'DopplerOutput','Speed',...
     'OperatingFrequency',rp.fc);
 plotResponse(...
@@ -134,23 +135,4 @@ plotResponse(...
     filter);
 ylim([0 1000])
 xlim([-100 100])
-
-% spectrograma
-figure;
-filter = getMatchedFilter(radar.Waveform);
-mf  = phased.MatchedFilter('Coefficients',filter);
-ymf = mf(receivedSignal);
-[~,ridx] = max(sum(abs(ymf),2)); 
-pspectrum(ymf(ridx,:),rp.prf,'spectrogram')
-
-
-% % plot radar signal
-% signal = real(radar.Waveform());
-% nSamples = rp.fs*rp.T;
-% figure
-% plot(signal(1:nSamples))
-% 
-% signal = radar.getTransmittedSignal(0);
-% figure
-% spectrogram(signal(1:nSamples),hamming(64),60,[],rp.fc,'yaxis');
 
