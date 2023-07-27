@@ -47,7 +47,7 @@ enviroment = phased.FreeSpace(...
     'SampleRate',fs);
 
 %% Transmit
-numPulses = 1e4;
+numPulses = 4096;
 receivedSignal = zeros(length(radar.Waveform()),numPulses);
 dt = 1/rp.prf;
 for i=1:numPulses
@@ -88,18 +88,18 @@ filter = getMatchedFilter(radar.Waveform);
 mf = phased.MatchedFilter('Coefficients', filter);
 ymf = mf(receivedSignal);
 
-% doppler response
+% fast time response
 figure;
 t = (1:1:length(ymf(:,1)))*fs;
-plot(t, log10(abs(ymf(:,1)).^2));
+plot(log10(abs(ymf(:,1)).^2));
 xlabel('Frequency [Hz]');
 ylabel('h(f) in dB');
-title('Doppler response');
+title('Fast time response');
 
 % slow time response
 figure;
 t = (1:1:length(ymf(1,:)))*fs;
-plot(t, 10*log10(abs(fft(ymf')).^2));
+plot(10*log10(max(abs(fft(ymf')).^2)));
 xlabel('Time [ms]');
 ylabel('h(t)');
 title('Slow time response');
@@ -125,7 +125,7 @@ rangeDopplerResponse = phased.RangeDopplerResponse(...
     'PropagationSpeed', rp.c,...
     'SampleRate',rp.fs,...
     'DopplerFFTLengthSource','Property',...
-    'DopplerFFTLength',128,...
+    'DopplerFFTLength',2048,...
     'DopplerOutput','Speed',...
     'OperatingFrequency',rp.fc);
 plotResponse(...
@@ -139,7 +139,7 @@ xlim([-100 100])
 figure;
 filter = getMatchedFilter(radar.Waveform);
 mf  = phased.MatchedFilter('Coefficients',filter);
-ymf = mf(receivedSignal');
+ymf = mf(receivedSignal);
 [~,ridx] = max(sum(abs(ymf),2)); 
 pspectrum(ymf(ridx,:),rp.prf,'spectrogram')
 
