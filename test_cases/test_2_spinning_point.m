@@ -13,7 +13,7 @@ rng(2023);
 
 % Global Params 
 c = physconst('LightSpeed'); % speed of light (m/s)
-fc = 3e9; %    central frequency (Hz)
+fc = 3.7e9; % central frequency (Hz)
 fs = 20e6; % sample rate (Hz) 
 
 % Simple Radar 
@@ -23,7 +23,7 @@ rp.fc = fc;
 rp.fs = fs;
 rp.B = 5e6; % sweep bandwidth (Hz)
 rp.T = 10e-6; % sweep time (s)
-rp.prf = 2e4; % pulse repetition frequency (Hz)
+rp.prf = 4e4; % pulse repetition frequency (Hz)
 rp.nPulses = 1; % number of pulses
 rp.position = [0;0;0]; % position vector (m)
 rp.velocity = [0;0;0]; % velocity vector (m/s)
@@ -33,10 +33,10 @@ rp.velocity = [0;0;0]; % velocity vector (m/s)
 tp.c = c;
 tp.fc = fc;
 tp.meanRCS = 1; % mean radar cross section (m^2)
-tp.radiusVector = [1;0;0]*0.0331/2; % radius vector (m)
+tp.radiusVector = [0;.331/2;0]; % radius vector (m)
 tp.angularVelocityVector = [0;0;3000]*2*pi/60; % angular velocity vector (rpm)
 
-tp.position = [-100;0;0]; % position vector (m)
+tp.position = [100;0;0]; % position vector (m)
 tp.velocity = [0;0;0]; % velocity vector (m/s)
 
 %% Initiate Objects
@@ -49,8 +49,9 @@ enviroment = phased.FreeSpace(...
     'SampleRate',fs);
 
 %% Transmit
-numPulses = 1e4;
+numPulses = 4096;
 receivedSignal = zeros(length(radar.Waveform()),numPulses);
+transmittedSignal = zeros(length(radar.Waveform()),numPulses);
 dt = 1/rp.prf;
 for i=1:numPulses
     % update bodies motion
@@ -64,11 +65,11 @@ for i=1:numPulses
         [targetRange,targetAngle] = rangeangle(pTarget.Position,radar.Position);
     
         % signal transmission
-        transmittedSignal = radar.getTransmittedSignal(targetAngle);
+        transmittedSignal(:,i) = radar.getTransmittedSignal(targetAngle);
     
         % signal propagation
         propagatedSignal = enviroment(...
-            transmittedSignal,...
+            transmittedSignal(:,i),...
             radar.Position,...
             pTarget.Position,...
             radar.Velocity,...
@@ -85,74 +86,61 @@ for i=1:numPulses
     end
 end
 
-%% Plots
+%% prossessing
 filter = getMatchedFilter(radar.Waveform);
 mf = phased.MatchedFilter('Coefficients', filter);
+
+
+% time doppler
+figure;
 ymf = mf(receivedSignal);
-
-% doppler response
-figure;
-t = (1:1:length(ymf(:,1)))*fs;
-plot(t, log10(abs(ymf(:,1)).^2));
-xlabel('Frequency [Hz]');
-ylabel('h(f) in dB');
-title('Doppler response');
-
-% slow time response
-figure;
-t = (1:1:length(ymf(1,:)))*fs;
-plot(t, 10*log10(abs(fft(ymf')).^2));
-xlabel('Time [ms]');
-ylabel('h(t)');
-title('Slow time response');
-
-% spectrum
-figure;
-xlabel('Frequency [MHz]');
-ylabel('Power[dBFS]');
-title('Spectrum');
-
-% stft
-figure;
-xlabel('Time [ms]');
-ylabel('Doppler velocity [m/s]');
-title('Doppler response');
-
-
-
-
-% range doppler response
-figure;
-rangeDopplerResponse = phased.RangeDopplerResponse(...
-    'PropagationSpeed', rp.c,...
-    'SampleRate',rp.fs,...
-    'DopplerFFTLengthSource','Property',...
-    'DopplerFFTLength',128,...
-    'DopplerOutput','Speed',...
-    'OperatingFrequency',rp.fc);
-plotResponse(...
-    rangeDopplerResponse,...
-    receivedSignal(:,1:numPulses),...
-    filter);
-ylim([0 1000])
-xlim([-100 100])
-
-% spectrograma
-figure;
-filter = getMatchedFilter(radar.Waveform);
-mf  = phased.MatchedFilter('Coefficients',filter);
-ymf = mf(receivedSignal');
-[~,ridx] = max(sum(abs(ymf),2)); 
+[~,ridx] = max(sum(abs(ymf),2));
 pspectrum(ymf(ridx,:),rp.prf,'spectrogram')
+return
+
+% base sample delay
+tymf = mf(transmittedSignal);
+iymf = sum(abs(tymf'))';
+[~,tmaxi] = max(iymf);
+
+% integrated signal to mesure distance
+rymf = mf(receivedSignal);
+iymf = sum(abs(rymf'))';
+[~,rmaxi] = max(iymf);
+distance = (tmaxi - rmaxi) / fs * c / 2;
+figure;
+t = (1:1:length(iymf)-tmaxi) / fs * c / 2 / 1e3;
+plot(t, iymf(tmaxi+1:end));
+xlim([0 5]);
+xlabel("distance [km]")
+ylabel("magnitude")
+
+% range doppler to mesure speed
+max_speed = dop2speed(rp.prf/2,c/fc)/2;
+speed_res = 2*max_speed/numPulses;
+
+slowTimeFFT = abs(fftshift(fft(receivedSignal(rmaxi,:))));
+[~,stfftmaxi] = max(slowTimeFFT);
+figure;
+n = length(slowTimeFFT);
+t = linspace(-max_speed,max_speed,n);
+plot(t, slowTimeFFT);
 
 
-% % plot radar signal
-% signal = real(radar.Waveform());
-% nSamples = rp.fs*rp.T;
-% figure
-% plot(signal(1:nSamples))
-% 
-% signal = radar.getTransmittedSignal(0);
-% figure
-% spectrogram(signal(1:nSamples),hamming(64),60,[],rp.fc,'yaxis');
+figure;
+fftsize = 2048;
+rangeDoppler = zeros(fftsize,numPulses-fftsize);
+pulse_samples = floor(rp.T*fs);
+for i=1:numPulses-fftsize
+    rangeDoppler(:,i) = abs(fftshift(fft(receivedSignal(rmaxi-pulse_samples,i:i+fftsize-1)'))).^2;
+end
+x = linspace(0,(numPulses-fftsize)/rp.prf, numPulses-fftsize)/1e-3;
+y = linspace(-max_speed, max_speed, fftsize);
+max_val = max(max(rangeDoppler));
+min_val = min(min(rangeDoppler));
 
+image(x,y,1e13*rangeDoppler);
+xlim([0 120]);
+ylim([-50 50]);
+colorbar
+beep

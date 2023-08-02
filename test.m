@@ -26,30 +26,31 @@ rp.velocity = [0;0;0]; % velocity vector (m/s)
 tp.c = c;
 tp.fc = fc;
 tp.meanBodyRCS = 1; % mean body cross section (m^2)
+tp.meanRCS = 10; % mean body cross section (m^2)
 tp.meanBladeRCS = .1; % mean blase cross section (m^2)
 
-tp.position = [-50;0;0]; % position vector (m)
-tp.velocity = [0;0;0]; % velocity vector (m/s)
+tp.position = [-1000;0;0]; % position vector (m)
+tp.velocity = [100;0;0]; % velocity vector (m/s)
 
 tp.rotor1RelativePosition = .1*[1;1;0]; % relative position velocity vector (m/s)
 tp.rotor2RelativePosition = .1*[-1;1;0]; % relative position velocity vector (m/s)
 tp.rotor3RelativePosition = .1*[-1;-1;0]; % relative position velocity vector (m/s)
 tp.rotor4RelativePosition = .1*[1;-1;0]; % relative position velocity vector (m/s)
 
-r = .1;
+r = .0331/2;
 tp.rotor1RadiusVector = r*[cos(30*pi/180);sin(30*pi/180);0]; % radius vector (m^3)
 tp.rotor2RadiusVector = r*[cos(22*pi/180);sin(22*pi/180);0]; % radius vector (m^3)
 tp.rotor3RadiusVector = r*[cos(56*pi/180);sin(56*pi/180);0]; % radius vector (m^3)
 tp.rotor4RadiusVector = r*[cos(12*pi/180);sin(12*pi/180);0]; % radius vector (m^3)
 
-tp.rotor1AngularVelocityVector = [0;0;3000] *2*pi/60; % angular velocity vector (rad/s)
-tp.rotor2AngularVelocityVector = [0;0;1] *2*pi/60; % angular velocity vector (rad/s)
-tp.rotor3AngularVelocityVector = [0;0;1] *2*pi/60; % angular velocity vector (rad/s)
-tp.rotor4AngularVelocityVector = [0;0;1] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor1AngularVelocityVector = [0;0;1e-10] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor2AngularVelocityVector = [0;0;1e-10] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor3AngularVelocityVector = [0;0;1e-10] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor4AngularVelocityVector = [0;0;1e-10] *2*pi/60; % angular velocity vector (rad/s)
 
 %% Initiate Objects
 radar = SimpleRadar(rp);
-target = QuadcopterTarget(tp);
+target = SimpleBodyTarget(tp);
 enviroment = phased.FreeSpace(...
     'PropagationSpeed',c,...
     'OperatingFrequency',fc,...
@@ -112,11 +113,30 @@ rangeDopplerResponse = phased.RangeDopplerResponse(...
     'OperatingFrequency',rp.fc);
 
 filter = getMatchedFilter(radar.Waveform);
+mf = phased.MatchedFilter('Coefficients',filter);
 
 %% Plots
+% doppler response
+figure;
+ymf = mf(receivedSignal);
+t = (1:1:length(ymf(:,1)))*fs;
+plot(t, log10(abs(ymf(:,1)).^2));
+% doppler_response = abs(fft(ymf(:,1))).^2;
+% n = length(doppler_response);
+% Y = fftshift(doppler_response);
+% fshift = (-n/2:n/2-1)*(fs/n); % zero-centered frequency range
+% powershift = abs(Y).^2/n;     % zero-centered power
+% plot(fshift,powershift)
+
+% slow time
+figure;
+t = (1:1:length(ymf(1,:)))*fs;
+plot(10*log10(abs(fft(ymf')).^2));
+%slow_time_response = 
+
 
 % Range Doppler Response
-figure
+figure;
 plotResponse(...
     rangeDopplerResponse,...
     receivedSignal(:,1:numPulses),...
@@ -124,14 +144,14 @@ plotResponse(...
 ylim([0 1000])
 xlim([-100 100])
 
-% Spectrograma
-figure
-mf  = phased.MatchedFilter('Coefficients',filter);
-ymf = mf(receivedSignal);
-[~,ridx] = max(sum(abs(ymf),2)); 
-pspectrum(ymf(ridx,:),rp.prf,'spectrogram')
+% % Spectrograma
+% figure;
+% mf  = phased.MatchedFilter('Coefficients',filter);
+% %ymf = mf(receivedSignal');
+% [~,ridx] = max(sum(abs(ymf),2)); 
+% pspectrum(ymf(ridx,:),rp.prf,'spectrogram')
 
 % 
-
+figure;
 
 

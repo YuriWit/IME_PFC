@@ -13,7 +13,7 @@ rng(2023);
 
 % Global Params 
 c = physconst('LightSpeed'); % speed of light (m/s)
-fc = 3e9; %    central frequency (Hz)
+fc = 3.7e9; %    central frequency (Hz)
 fs = 20e6; % sample rate (Hz) 
 
 % Simple Radar 
@@ -22,7 +22,7 @@ rp.c = c;
 rp.fc = fc;
 rp.fs = fs;
 rp.B = 5e6; % sweep bandwidth (Hz)
-rp.T = 10e-6; % sweep time (s)
+rp.T = 8e-6; % sweep time (s)
 rp.prf = 2e4; % pulse repetition frequency (Hz)
 rp.nPulses = 1; % number of pulses
 rp.position = [0;0;0]; % position vector (m)
@@ -32,26 +32,26 @@ rp.velocity = [0;0;0]; % velocity vector (m/s)
 % tp for targetParams
 tp.c = c;
 tp.fc = fc;
-tp.meanBodyRCS = 10; % mean radar cross section (m^2)
-tp.meanBladeRCS = 1; % mean radar cross section (m^2)\
+tp.meanBodyRCS = 1; % mean radar cross section (m^2)
+tp.meanBladeRCS = .5; % mean radar cross section (m^2)\
 
-tp.rotor1RelativePosition = .1*[1;1;0]; % relative position velocity vector (m/s)
-tp.rotor2RelativePosition = .1*[-1;1;0]; % relative position velocity vector (m/s)
-tp.rotor3RelativePosition = .1*[-1;-1;0]; % relative position velocity vector (m/s)
-tp.rotor4RelativePosition = .1*[1;-1;0]; % relative position velocity vector (m/s)
+tp.rotor1RelativePosition = .15*[1;1;0]; % relative position velocity vector (m/s)
+tp.rotor2RelativePosition = .15*[-1;1;0]; % relative position velocity vector (m/s)
+tp.rotor3RelativePosition = .15*[-1;-1;0]; % relative position velocity vector (m/s)
+tp.rotor4RelativePosition = .15*[1;-1;0]; % relative position velocity vector (m/s)
 
-r = .0331/2;
+r = .331/2;
 tp.rotor1RadiusVector = r*[cos(30*pi/180);sin(30*pi/180);0]; % radius vector (m^3)
 tp.rotor2RadiusVector = r*[cos(22*pi/180);sin(22*pi/180);0]; % radius vector (m^3)
 tp.rotor3RadiusVector = r*[cos(56*pi/180);sin(56*pi/180);0]; % radius vector (m^3)
 tp.rotor4RadiusVector = r*[cos(12*pi/180);sin(12*pi/180);0]; % radius vector (m^3)
 
 tp.rotor1AngularVelocityVector = [0;0;3000] *2*pi/60; % angular velocity vector (rad/s)
-tp.rotor2AngularVelocityVector = [0;0;1e-10] *2*pi/60; % angular velocity vector (rad/s)
-tp.rotor3AngularVelocityVector = [0;0;1e-10] *2*pi/60; % angular velocity vector (rad/s)
-tp.rotor4AngularVelocityVector = [0;0;1e-10] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor2AngularVelocityVector = [0;0;1e-9] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor3AngularVelocityVector = [0;0;1e-9] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor4AngularVelocityVector = [0;0;1e-9] *2*pi/60; % angular velocity vector (rad/s)
 
-tp.position = [50;0;0]; % position vector (m)
+tp.position = [500;0;0]; % position vector (m)
 tp.velocity = [0;0;0]; % velocity vector (m/s)
 
 %% Initiate Objects
@@ -64,8 +64,9 @@ enviroment = phased.FreeSpace(...
     'SampleRate',fs);
 
 %% Transmit
-numPulses = 1e4;
+numPulses = 4096;
 receivedSignal = zeros(length(radar.Waveform()),numPulses);
+transmittedSignal = zeros(length(radar.Waveform()),numPulses);
 dt = 1/rp.prf;
 for i=1:numPulses
     % update bodies motion
@@ -79,11 +80,11 @@ for i=1:numPulses
         [targetRange,targetAngle] = rangeangle(pTarget.Position,radar.Position);
     
         % signal transmission
-        transmittedSignal = radar.getTransmittedSignal(targetAngle);
+        transmittedSignal(:,i) = radar.getTransmittedSignal(targetAngle);
     
         % signal propagation
         propagatedSignal = enviroment(...
-            transmittedSignal,...
+            transmittedSignal(:,i),...
             radar.Position,...
             pTarget.Position,...
             radar.Velocity,...
@@ -100,74 +101,63 @@ for i=1:numPulses
     end
 end
 
-%% Plots
+%% prossessing
 filter = getMatchedFilter(radar.Waveform);
 mf = phased.MatchedFilter('Coefficients', filter);
+tymf = mf(transmittedSignal);
+iymf = sum(abs(tymf'))';
+[~,tmaxi] = max(iymf);
+
+% time doppler map
+figure;
 ymf = mf(receivedSignal);
+[~,ridx] = max(sum(abs(ymf),2));
+%pspectrum(ymf(ridx,:),rp.prf,'spectrogram')
+[p,f,t] = pspectrum(ymf(ridx,:),rp.prf,'spectrogram');
+imagesc( t/1e-3, dop2speed(f,c/fc)/2, pow2db(p));
+colorbar
+xlabel('Tempo [s]');
+ylabel('Velocidade [m/s]');
+title('Mapa Tempo Doppler');
 
-% doppler response
-figure;
-t = (1:1:length(ymf(:,1)))*fs;
-plot(t, log10(abs(ymf(:,1)).^2));
-xlabel('Frequency [Hz]');
-ylabel('h(f) in dB');
-title('Doppler response');
-
-% slow time response
-figure;
-t = (1:1:length(ymf(1,:)))*fs;
-plot(t, 10*log10(abs(fft(ymf')).^2));
-xlabel('Time [ms]');
-ylabel('h(t)');
-title('Slow time response');
-
-% spectrum
-figure;
-xlabel('Frequency [MHz]');
-ylabel('Power[dBFS]');
-title('Spectrum');
-
-% stft
-figure;
-xlabel('Time [ms]');
-ylabel('Doppler velocity [m/s]');
-title('Doppler response');
-
-
-
-
-% range doppler response
+% Range Doppler Response
 figure;
 rangeDopplerResponse = phased.RangeDopplerResponse(...
     'PropagationSpeed', rp.c,...
     'SampleRate',rp.fs,...
     'DopplerFFTLengthSource','Property',...
-    'DopplerFFTLength',128,...
+    'DopplerFFTLength',1024,...
     'DopplerOutput','Speed',...
     'OperatingFrequency',rp.fc);
+filter = getMatchedFilter(radar.Waveform);
 plotResponse(...
     rangeDopplerResponse,...
     receivedSignal(:,1:numPulses),...
     filter);
 ylim([0 1000])
 xlim([-100 100])
+return
 
-% spectrograma
+% integrated signal to mesure distance
+rymf = mf(receivedSignal);
+iymf = sum(abs(rymf'))';
+[~,rmaxi] = max(iymf);
+distance = (rmaxi - tmaxi) / fs * c / 2;
 figure;
-filter = getMatchedFilter(radar.Waveform);
-mf  = phased.MatchedFilter('Coefficients',filter);
-ymf = mf(receivedSignal');
-[~,ridx] = max(sum(abs(ymf),2)); 
-pspectrum(ymf(ridx,:),rp.prf,'spectrogram')
+t = (1:1:length(iymf)-tmaxi) / fs * c / 2 / 1e3;
+plot(t, iymf(tmaxi+1:end));
+xlim([0 5]);
+xlabel("distance [km]")
+ylabel("magnitude")
 
+% range doppler to mesure speed
+max_speed = dop2speed(rp.prf/2,c/fc)/2;
+speed_res = 2*max_speed/numPulses;
 
-% % plot radar signal
-% signal = real(radar.Waveform());
-% nSamples = rp.fs*rp.T;
-% figure
-% plot(signal(1:nSamples))
-% 
-% signal = radar.getTransmittedSignal(0);
-% figure
-% spectrogram(signal(1:nSamples),hamming(64),60,[],rp.fc,'yaxis');
+slowTimeFFT = abs(fftshift(fft(receivedSignal(rmaxi,:))));
+[~,stfftmaxi] = max(slowTimeFFT);
+figure;
+n = length(slowTimeFFT);
+t = linspace(-max_speed,max_speed,n);
+plot(t, slowTimeFFT);
 
