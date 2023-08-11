@@ -33,7 +33,7 @@ rp.velocity = [0;0;0]; % velocity vector (m/s)
 tp.c = c;
 tp.fc = fc;
 tp.meanBodyRCS = 1; % mean radar cross section (m^2)
-tp.meanBladeRCS = .5; % mean radar cross section (m^2)\
+tp.meanBladeRCS = 1; % mean radar cross section (m^2)\
 
 tp.rotor1RelativePosition = .15*[1;1;0]; % relative position velocity vector (m/s)
 tp.rotor2RelativePosition = .15*[-1;1;0]; % relative position velocity vector (m/s)
@@ -41,19 +41,19 @@ tp.rotor3RelativePosition = .15*[-1;-1;0]; % relative position velocity vector (
 tp.rotor4RelativePosition = .15*[1;-1;0]; % relative position velocity vector (m/s)
 
 r = .331/2;
-a1 = 0;
-a2 = 0;
-a3 = 0;
-a4 = 0;
+a1 = 30;
+a2 = 60;
+a3 = 90;
+a4 = 120;
 tp.rotor1RadiusVector = r*[cos(a1*pi/180);sin(a1*pi/180);0]; % radius vector (m^3)
 tp.rotor2RadiusVector = r*[cos(a2*pi/180);sin(a2*pi/180);0]; % radius vector (m^3)
 tp.rotor3RadiusVector = r*[cos(a3*pi/180);sin(a3*pi/180);0]; % radius vector (m^3)
 tp.rotor4RadiusVector = r*[cos(a4*pi/180);sin(a4*pi/180);0]; % radius vector (m^3)
 
 tp.rotor1AngularVelocityVector = [0;0;3000] *2*pi/60; % angular velocity vector (rad/s)
-tp.rotor2AngularVelocityVector = [0;0;2800] *2*pi/60; % angular velocity vector (rad/s)
-tp.rotor3AngularVelocityVector = [0;0;3120] *2*pi/60; % angular velocity vector (rad/s)
-tp.rotor4AngularVelocityVector = [0;0;3333] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor2AngularVelocityVector = [0;0;1e-9] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor3AngularVelocityVector = [0;0;1e-9] *2*pi/60; % angular velocity vector (rad/s)
+tp.rotor4AngularVelocityVector = [0;0;1e-9] *2*pi/60; % angular velocity vector (rad/s)
 
 tp.position = [-250;0;0]; % position vector (m)
 tp.velocity = [0;0;0]; % velocity vector (m/s)
@@ -117,8 +117,9 @@ iymf = sum(abs(tymf'))';
 figure;
 ymf = mf(receivedSignal);
 [~,ridx] = max(sum(abs(ymf),2));
-[p,f,t] = pspectrum(ymf(ridx,:),rp.prf,'spectrogram');
-imagesc( t/1e-3, dop2speed(f,c/fc)/2, pow2db(p));
+[p,f,t] = pspectrum(ymf(ridx,:),rp. ...
+    prf,'spectrogram');
+imagesc( t/1e-3, dop2speed(f,c/fc)/2, pow2db(p), [-30 -28]);
 colorbar
 ylim([-100 100])
 xlim([50 100])
