@@ -24,7 +24,8 @@ classdef Blade < AbstractBodyTarget
 
             for i=1:p.pointsPerBlade
                 rv = p.radiusVector * i / (p.pointsPerBlade + 1);
-                pointTargets(i).RadiusVector = rv;
+                op.radiusVector = rv;
+                pointTargets(i) = SpinningPointTarget(op);
             end
 
             obj.PointTargets = pointTargets;

@@ -1,10 +1,3 @@
-%% Start
-clear; close all; clc;
-addpath("Classes\")
-addpath("Functions\")
-addpath("Scripts\")
-rng(2023);
-
 %% Parameters
 
 % Global Params 
@@ -33,3 +26,5 @@ rp.velocity = [0;0;0]; % velocity vector (m/s)
 
 
 radar = SimpleRadar(rp);
+
+numPulses = 16384;

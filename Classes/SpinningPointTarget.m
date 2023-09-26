@@ -15,6 +15,9 @@ classdef SpinningPointTarget < AbstractBodyTarget
     
     methods
         function obj = SpinningPointTarget(p)
+            if nargin == 0
+                return
+            end
             obj.Position = p.position;
             obj.Velocity = p.velocity;
             obj.RadiusVector = p.radiusVector;
