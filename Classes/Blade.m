@@ -1,53 +1,68 @@
 classdef Blade < AbstractBodyTarget
 
     properties
-        Length
-        Angle
-        AngularVelocity
-
+        Position
+        Velocity
+        
         PointTargets
     end
     
     methods
         function obj = Blade(p)
-            obj@AbstractBodyTarget(p);
+            obj.Position = p.position;
+            obj.Velocity = p.velocity;
 
-            obj.Length = p.length;
-            obj.Angle = p.angle;
-            obj.AngularVelocity = p.angularVelocity;
-
-            op.position = [0;0;0];
-            op.velocity = [0;0;0];
-            op.meanRCS = p.meanRCS;
             op.c = p.c;
             op.fc = p.fc;
+            op.meanRCS = p.meanRCS;
+            op.position = [0;0;0];
+            op.velocity = [0;0;0];
+            op.angularVelocityVector = p.angularVelocityVector;
+            op.radiusVector = p.radiusVector;
             
-            pointTargets(p.numberOfPointTargets) = PointTarget(op);
+            pointTargets(p.pointsPerBlade) = SpinningPointTarget(op);
+
+            for i=1:p.pointsPerBlade
+                rv = p.radiusVector * i / (p.pointsPerBlade + 1);
+                op.radiusVector = rv;
+                pointTargets(i) = SpinningPointTarget(op);
+            end
+
             obj.PointTargets = pointTargets;
-            obj.update(0);
         end
 
-        function update(obj,dt)
-            update@AbstractBodyTarget(obj,dt);
-
-            obj.Angle = obj.Angle + dt * obj.AngularVelocity;
-            tipPosition = [ cos(obj.Angle)*obj.Length;
-                            sin(obj.Angle)*obj.Length;
-                            0];
-            tipVelocity = [-sin(obj.Angle)*obj.Length*obj.AngularVelocity;
-                            cos(obj.Angle)*obj.Length*obj.AngularVelocity;
-                            0];
-            numberOfPointTargets = length(obj.PointTargets);
-            for i=1:numberOfPointTargets
-                obj.PointTargets(i).Position = tipPosition * i / numberOfPointTargets;
-                obj.PointTargets(i).Velocity = tipVelocity * obj.Length * i / numberOfPointTargets;
+        function refrenceUpdate(obj, dt)
+            obj.Position = obj.Position + obj.Velocity * dt;
+            pointsPerBlade = length(obj.PointTargets);
+            for i=1:pointsPerBlade
+                obj.PointTargets(i).forceRefrenceUpdate(obj.Position, obj.Velocity);
             end
         end
 
-        function pointTargets = getPointTargets(obj)
-            pointTargets = obj.PointTargets;
+        function forceRefrenceUpdate(obj, newPosition, newVelocity)
+            obj.Position = newPosition;
+            obj.Velocity = newVelocity;
+            pointsPerBlade = length(obj.PointTargets);
+            for i=1:pointsPerBlade
+                obj.PointTargets(i).forceRefrenceUpdate(obj.Position, obj.Velocity);
+            end
         end
 
+        function pointsUpdate(obj, dt)
+            pointsPerBlade = length(obj.PointTargets);
+            for i=1:pointsPerBlade
+                obj.PointTargets(i).pointsUpdate(dt);
+            end
+        end
+
+        function update(obj,dt)
+            obj.refrenceUpdate(dt);
+            obj.pointsUpdate(dt);
+        end
+
+        function pointTargets = getPointTargets(obj)
+            pointTargets = [obj.PointTargets.getPointTargets()];
+        end
     end
 end
 

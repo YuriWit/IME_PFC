@@ -13,7 +13,7 @@ rng(2023);
 
 % Global Params 
 c = physconst('LightSpeed'); % speed of light (m/s)
-fc = 3e9; %    central frequency (Hz)
+fc = 3.7e9; % central frequency (Hz)
 fs = 20e6; % sample rate (Hz) 
 
 % Simple Radar 
@@ -33,10 +33,10 @@ rp.velocity = [0;0;0]; % velocity vector (m/s)
 tp.c = c;
 tp.fc = fc;
 tp.meanRCS = 1; % mean radar cross section (m^2)
-tp.radiusVector = [1;0;0]*0.0331/2; % radius vector (m)
+tp.radiusVector = [0;.331/2;0]; % radius vector (m)
 tp.angularVelocityVector = [0;0;3000]*2*pi/60; % angular velocity vector (rpm)
 
-tp.position = [-100;0;0]; % position vector (m)
+tp.position = [-250;0;0]; % position vector (m)
 tp.velocity = [0;0;0]; % velocity vector (m/s)
 
 %% Initiate Objects
@@ -49,8 +49,9 @@ enviroment = phased.FreeSpace(...
     'SampleRate',fs);
 
 %% Transmit
-numPulses = 1e4;
+numPulses = 2048;
 receivedSignal = zeros(length(radar.Waveform()),numPulses);
+transmittedSignal = zeros(length(radar.Waveform()),numPulses);
 dt = 1/rp.prf;
 for i=1:numPulses
     % update bodies motion
@@ -64,11 +65,11 @@ for i=1:numPulses
         [targetRange,targetAngle] = rangeangle(pTarget.Position,radar.Position);
     
         % signal transmission
-        transmittedSignal = radar.getTransmittedSignal(targetAngle);
+        transmittedSignal(:,i) = radar.getTransmittedSignal(targetAngle);
     
         % signal propagation
         propagatedSignal = enviroment(...
-            transmittedSignal,...
+            transmittedSignal(:,i),...
             radar.Position,...
             pTarget.Position,...
             radar.Velocity,...
@@ -85,74 +86,56 @@ for i=1:numPulses
     end
 end
 
-%% Plots
+%% prossessing
 filter = getMatchedFilter(radar.Waveform);
 mf = phased.MatchedFilter('Coefficients', filter);
+
+tymf = mf(transmittedSignal);
+iymf = sum(abs(tymf'))';
+[~,tmaxi] = max(iymf);
+
+% time doppler map
+figure;
 ymf = mf(receivedSignal);
+[~,ridx] = max(sum(abs(ymf),2));
+[p,f,t] = pspectrum(ymf(ridx,:),rp.prf,'spectrogram');
+imagesc( t/1e-3, dop2speed(f,c/fc)/2, pow2db(p));
+colorbar
+ylim([-100 100])
+xlim([50 100])
+xlabel('Tempo [ms]');
+ylabel('Velocidade [m/s]');
+title('Mapa Tempo Doppler');
 
-% doppler response
-figure;
-t = (1:1:length(ymf(:,1)))*fs;
-plot(t, log10(abs(ymf(:,1)).^2));
-xlabel('Frequency [Hz]');
-ylabel('h(f) in dB');
-title('Doppler response');
-
-% slow time response
-figure;
-t = (1:1:length(ymf(1,:)))*fs;
-plot(t, 10*log10(abs(fft(ymf')).^2));
-xlabel('Time [ms]');
-ylabel('h(t)');
-title('Slow time response');
-
-% spectrum
-figure;
-xlabel('Frequency [MHz]');
-ylabel('Power[dBFS]');
-title('Spectrum');
-
-% stft
-figure;
-xlabel('Time [ms]');
-ylabel('Doppler velocity [m/s]');
-title('Doppler response');
-
-
-
-
-% range doppler response
+% Range Doppler Response
 figure;
 rangeDopplerResponse = phased.RangeDopplerResponse(...
     'PropagationSpeed', rp.c,...
     'SampleRate',rp.fs,...
     'DopplerFFTLengthSource','Property',...
-    'DopplerFFTLength',128,...
+    'DopplerFFTLength',1024,...
     'DopplerOutput','Speed',...
     'OperatingFrequency',rp.fc);
+filter = getMatchedFilter(radar.Waveform);
 plotResponse(...
     rangeDopplerResponse,...
     receivedSignal(:,1:numPulses),...
     filter);
-ylim([0 1000])
+ylim([0 500])
 xlim([-100 100])
 
-% spectrograma
+%Doppler response
 figure;
-filter = getMatchedFilter(radar.Waveform);
-mf  = phased.MatchedFilter('Coefficients',filter);
-ymf = mf(receivedSignal');
-[~,ridx] = max(sum(abs(ymf),2)); 
-pspectrum(ymf(ridx,:),rp.prf,'spectrogram')
-
-
-% % plot radar signal
-% signal = real(radar.Waveform());
-% nSamples = rp.fs*rp.T;
-% figure
-% plot(signal(1:nSamples))
-% 
-% signal = radar.getTransmittedSignal(0);
-% figure
-% spectrogram(signal(1:nSamples),hamming(64),60,[],rp.fc,'yaxis');
-
+ymf = mf(receivedSignal);
+[~,indMax] = max(abs(ymf(:,1)));
+signal = ymf(indMax,:);
+N = length(signal);
+fshift = (-N/2:N/2-1)*(rp.prf/N);
+Y = fftshift(fft(signal));
+Y = abs(Y).^2 / N;
+speed = dop2speed(fshift, c/fc)/2;
+plot(speed,Y);
+xlabel('Speed [m/s]');
+ylabel('Power');
+title('Doppler response');
+xlim([-75 75])

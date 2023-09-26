@@ -24,14 +24,15 @@ classdef TwoBladeRotorTarget < AbstractBodyTarget
             bladeParams.position = [0;0;0];
             bladeParams.velocity = [0;0;0];
             bladeParams.angularVelocityVector = p.angularVelocityVector;
+            bladeParams.pointsPerBlade = p.pointsPerBlade;
 
             % Blade 1
             bladeParams.radiusVector = p.radiusVector;
-            obj.Blade1 = SpinningPointTarget(bladeParams);
+            obj.Blade1 = Blade(bladeParams);
 
             % Blade 2
             bladeParams.radiusVector = -p.radiusVector;
-            obj.Blade2 = SpinningPointTarget(bladeParams);
+            obj.Blade2 = Blade(bladeParams);
         end
 
         function refrenceUpdate(obj, dt)

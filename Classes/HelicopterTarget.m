@@ -35,6 +35,7 @@ classdef HelicopterTarget < AbstractBodyTarget
             rotorParams.velocity = [0;0;0];
             rotorParams.radiusVector = p.radiusVector;
             rotorParams.angularVelocityVector = p.angularVelocityVector;
+            rotorParams.pointsPerBlade = p.pointsPerBlade;
             obj.Rotor = TwoBladeRotorTarget(rotorParams);
         end
 
