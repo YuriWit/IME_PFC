@@ -21,10 +21,10 @@ classdef TwoBladeRotorTarget < AbstractBodyTarget
             bladeParams.c = p.c;
             bladeParams.fc = p.fc;
             bladeParams.meanRCS = p.meanBladeRCS;
+            bladeParams.bladePoints = p.bladePoints;
             bladeParams.position = [0;0;0];
             bladeParams.velocity = [0;0;0];
             bladeParams.angularVelocityVector = p.angularVelocityVector;
-            bladeParams.pointsPerBlade = p.pointsPerBlade;
 
             % Blade 1
             bladeParams.radiusVector = p.radiusVector;

@@ -20,11 +20,12 @@ classdef Blade < AbstractBodyTarget
             op.angularVelocityVector = p.angularVelocityVector;
             op.radiusVector = p.radiusVector;
             
-            pointTargets(p.pointsPerBlade) = SpinningPointTarget(op);
+            pointTargets(length(p.bladePoints)) = SpinningPointTarget(op);
 
-            for i=1:p.pointsPerBlade
-                rv = p.radiusVector * i / (p.pointsPerBlade + 1);
+            for i=1:length(p.bladePoints)
+                rv = p.radiusVector * p.bladePoints(i);
                 op.radiusVector = rv;
+                op.meanRCS = p.meanRCS(i);
                 pointTargets(i) = SpinningPointTarget(op);
             end
 

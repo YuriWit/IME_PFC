@@ -43,11 +43,10 @@ radar = SimpleRadar(rp);
 % Four Rotor Quadcopter Target
 tp.c = c;
 tp.fc = fc;
-tp.meanBodyRCS = 1; % mean radar cross section for body (m^2)
-tp.meanBladeRCS = .5; % mean radar cross section for blades (m^2)
-%tp.meanBladeRCS = [.5 .3 .1 .1 .1];
-%tp.BladePoints = [.2 .3 .35 .4 .5];
-tp.pointsPerBlade = 1; % number of points per blade ()
+tp.meanBodyRCS = 2; % mean radar cross section for body (m^2)
+% mean radar cross section for blades points [(m^2)]
+tp.meanBladeRCS = [.5 .4];
+tp.bladePoints = [.3 .4]; % poins along blade (0 - 1)
 tp.position = [-250;0;0]; % position vector (m)
 tp.velocity = [0;0;0]; % velocity vector (m/s)
 
@@ -58,7 +57,7 @@ tp.rotor3RelativePosition = .15*[-1;-1;0];
 tp.rotor4RelativePosition = .15*[1;-1;0];
 
 % radius vectors (m^3)
-r = 0.2548; a1 = 30; a2 = 60; a3 = 90; a4 = 120;
+r = 0.331/2; a1 = 30; a2 = 60; a3 = 90; a4 = 120;
 tp.rotor1RadiusVector = r*[cos(a1*pi/180);sin(a1*pi/180);0];
 tp.rotor2RadiusVector = r*[cos(a2*pi/180);sin(a2*pi/180);0];
 tp.rotor3RadiusVector = r*[cos(a3*pi/180);sin(a3*pi/180);0];
@@ -109,7 +108,7 @@ xlabel('Time (ms)');
 ylabel('Doppler velocity [m/s]');
 title('Time-Doppler map');
 colorbar;
-clim([10 30]);
+clim([-30 70]);
 
 %--------------------------------------------------------------------------
 
