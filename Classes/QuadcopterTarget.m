@@ -35,9 +35,9 @@ classdef QuadcopterTarget < AbstractBodyTarget
             rotorParams.c = p.c;
             rotorParams.fc = p.fc;
             rotorParams.meanBladeRCS = p.meanBladeRCS;
+            rotorParams.bladePoints = p.bladePoints;
             rotorParams.position = [0;0;0];
             rotorParams.velocity = [0;0;0];
-            rotorParams.pointsPerBlade = p.pointsPerBlade;
     
             % Rotor 1
             rotorParams.radiusVector = p.rotor1RadiusVector;
