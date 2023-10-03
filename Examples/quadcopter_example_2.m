@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Test Case 5
+% Quadcopter Example 2
 % Stationary four rotor quadcopter with a simgle spining rotor
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Start
@@ -45,19 +45,19 @@ tp.c = c;
 tp.fc = fc;
 tp.meanBodyRCS = 0.1; % mean radar cross section for body (m^2)
 % mean radar cross section for blades points [(m^2)]
-tp.meanBladeRCS = [.04 .04];
-tp.bladePoints = [.40 .44]; % poins along blade (0 - 1)
+tp.meanBladeRCS = [.01 .01 .01 .01 .01 .01 .01 .01];
+tp.bladePoints =  [.20 .25 .30 .35 .40 .45 .50 .55]; % poins along blade (0 - 1)
 tp.position = [-25;0;0]; % position vector (m)
 tp.velocity = [0;0;0]; % velocity vector (m/s)
 
 % relative position velocity vectors for the rotors (m)
-tp.rotor1RelativePosition = .15*[1;1;0];
-tp.rotor2RelativePosition = .15*[-1;1;0];
-tp.rotor3RelativePosition = .15*[-1;-1;0];
-tp.rotor4RelativePosition = .15*[1;-1;0];
+tp.rotor1RelativePosition = .15*[.2;.2;0];
+tp.rotor2RelativePosition = .15*[-.2;.2;0];
+tp.rotor3RelativePosition = .15*[-.2;-.2;0];
+tp.rotor4RelativePosition = .15*[.2;-.2;0];
 
 % radius vectors (m^3)
-r = 0.331/2; a1 = 30; a2 = 60; a3 = 90; a4 = 120;
+r = 0.331/2; a1 = 0; a2 = 60; a3 = 90; a4 = 120;
 tp.rotor1RadiusVector = r*[cos(a1*pi/180);sin(a1*pi/180);0];
 tp.rotor2RadiusVector = r*[cos(a2*pi/180);sin(a2*pi/180);0];
 tp.rotor3RadiusVector = r*[cos(a3*pi/180);sin(a3*pi/180);0];
@@ -104,83 +104,15 @@ figure;
 imagesc(t, [-max_doppler_velocity_spread - doppler_velocity_resolution / 2, max_doppler_velocity_spread - doppler_velocity_resolution / 2], Zxx);
 set(gca, 'YDir', 'normal');
 colormap(jet);
-xlabel('Time (ms)');
-ylabel('Doppler velocity [m/s]');
-title('Time-Doppler map');
+xlabel('Tempo [ms]');
+ylabel('Velocidade Doppler [m/s]');
+title('Mapa Tempo-Doppler');
 colorbar;
 clim([-30 70]);
 
 Zs = Zxx;
 load('Experimental_STFT.mat')
 err = sqrt(sum((Ze - Zs).^2,"all") / numel(Zs));
-sprintf('error=%f , simulation time=%f]', err, tEnd)
+sprintf('error=%f , simulation time=%f', err, tEnd)
 
-%--------------------------------------------------------------------------
-
-
-% % time doppler map
-% figure;
-[~,ridx] = max(sum(abs(ymf),2));
-% [p,f,t] = pspectrum(ymf(ridx,:),rp.prf,'spectrogram',OverlapPercent=16/16384*100);
-% imagesc( t/1e-3, dop2speed(f,c/fc)/2, pow2db(p), [-30 -28]);
-% colorbar
-% ylim([-100 100])
-% xlim([50 100])
-% clim([-60 0])
-% xlabel('Tempo [ms]');
-% ylabel('Velocidade [m/s]');
-% title('Mapa Tempo Doppler');
-% 
-% % Range Doppler Response
-% figure;
-% rangeDopplerResponse = phased.RangeDopplerResponse(...
-%     'PropagationSpeed', rp.c,...
-%     'SampleRate',rp.fs,...
-%     'DopplerFFTLengthSource','Property',...
-%     'DopplerFFTLength',1024,...
-%     'DopplerOutput','Speed',...
-%     'OperatingFrequency',rp.fc);
-% plotResponse(...
-%     rangeDopplerResponse,...
-%     receivedSignal(:,1:numPulses),...
-%     filter);
-% ylim([0 500])
-% xlim([-100 100])
-% 
-% %Doppler response
-% figure;
-% [~,indMax] = max(abs(ymf(:,1)));
-% N = length(ymf(indMax,:));
-% fshift = (-N/2:N/2-1)*(rp.prf/N);
-% Y = fftshift(fft(ymf(indMax,:)));
-% Y = abs(Y).^2 / N;
-% speed = dop2speed(fshift, c/fc)/2;
-% plot(speed,Y);
-% xlabel('Frequency [Hz]');
-% ylabel('Power[dB]');
-% title('Doppler response');
-% xlim([-75 75])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+beep

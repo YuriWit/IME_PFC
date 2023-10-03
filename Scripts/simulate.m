@@ -38,4 +38,4 @@ for i=1:numPulses
     end
 end
 
-tEnd = toc(tStart)
+tEnd = toc(tStart);
