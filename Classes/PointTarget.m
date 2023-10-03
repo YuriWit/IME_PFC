@@ -1,10 +1,5 @@
 classdef PointTarget < handle
-    % Parameters
-    % p.c
-    % p.fc
-    % p.meanRCS
-    % p.position
-    % p.velocity
+
     properties
         Position
         Velocity

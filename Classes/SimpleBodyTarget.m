@@ -1,10 +1,5 @@
 classdef SimpleBodyTarget < AbstractBodyTarget
-    % Necessary parameter in p
-    % p.c
-    % p.fc
-    % p.meanRCS
-    % p.position
-    % p.velocity
+
     properties
         Point
         Position

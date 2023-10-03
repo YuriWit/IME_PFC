@@ -1,4 +1,5 @@
 classdef QuadcopterTarget < AbstractBodyTarget
+
     properties
         Position
         Velocity

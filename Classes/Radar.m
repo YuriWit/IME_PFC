@@ -1,12 +1,10 @@
 classdef Radar < handle
 
     properties
-        % Dynamic
         Time
         Position
         Velocity
 
-        % Objects
         Waveform
         Transmitter
         Receiver
@@ -15,7 +13,7 @@ classdef Radar < handle
     end
     
     methods
-        function obj = Radar(p) % p = params
+        function obj = Radar(p)
             obj.Time = 0;
             obj.Position = p.position;
             obj.Velocity = [0;0;0];

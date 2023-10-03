@@ -1,6 +1,4 @@
 classdef TwoBladeRotorTarget < AbstractBodyTarget
-    %ROTORTARGET Summary of this class goes here
-    %   Detailed explanation goes here
     
     properties
         Position
@@ -12,8 +10,6 @@ classdef TwoBladeRotorTarget < AbstractBodyTarget
     
     methods
         function obj = TwoBladeRotorTarget(p)
-            %ROTORTARGET Construct an instance of this class
-            %   Detailed explanation goes here
             obj.Position = p.position;
             obj.Velocity = p.velocity;
 

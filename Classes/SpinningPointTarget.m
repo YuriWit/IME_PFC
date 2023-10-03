@@ -1,10 +1,5 @@
 classdef SpinningPointTarget < AbstractBodyTarget
-    % Necessary parameter in p
-    % p.c
-    % p.fc
-    % p.meanRCS
-    % p.radiusVector
-    % p.angularVelocityVector
+
     properties
         Point
         Position

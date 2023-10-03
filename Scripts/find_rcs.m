@@ -97,14 +97,5 @@ for i=.02:.02:.8
     disp("tp.meanBladeRCS="+tp.meanBladeRCS+"; err="+err+"; tEnd="+tEnd)
 end
 
-%%
-
-
 beep
-
-
-
-
-
-
 

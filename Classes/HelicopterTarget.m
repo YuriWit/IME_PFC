@@ -1,11 +1,5 @@
 classdef HelicopterTarget < AbstractBodyTarget
-    % Necessary parameter in p
-    % p.c
-    % p.fc
-    % p.meanBodyRCS
-    % p.meanBladeRCS
-    % p.radiusVector
-    % p.angularVelocityVector
+
     properties
         Position
         Velocity

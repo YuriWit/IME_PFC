@@ -89,9 +89,5 @@ xlabel('Tempo [ms]');
 ylabel('Velocidade Doppler [m/s]');
 title('Mapa Tempo-Doppler');
 colorbar;
-%clim([-30 70]);
-
-
-
-
+clim([-30 70]);
 

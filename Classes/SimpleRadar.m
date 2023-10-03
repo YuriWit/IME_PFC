@@ -6,10 +6,6 @@ classdef SimpleRadar < Radar
     
     methods
         
-        % p     = parameters object
-        % fc    = central frequency of chirp signal
-        % B     = Bandwitdt
-        % T     = chirp signal width
         function obj = SimpleRadar(p)
             % chirp waveform creation
             start_f = -p.B/2;
